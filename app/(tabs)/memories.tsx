@@ -1,0 +1,590 @@
+import { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Platform,
+  Modal,
+  TextInput,
+  FlatList,
+  Pressable,
+  Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { format, parseISO } from "date-fns";
+import { vi } from "date-fns/locale/vi";
+import * as ImagePicker from "expo-image-picker";
+import { Image } from "expo-image";
+
+import { useLove } from "@/lib/love-context";
+import Colors from "@/constants/colors";
+import type { Memory } from "@shared/schema";
+
+const MOODS = [
+  { label: "Vui", color: "#4CAF50", icon: "happy-outline" as const },
+  { label: "H\u1EA1nh ph\u00FAc", color: "#FF9800", icon: "heart-outline" as const },
+  { label: "L\u00E3ng m\u1EA1n", color: Colors.primary, icon: "rose-outline" as const },
+  { label: "Nh\u1EDB nhung", color: "#9C27B0", icon: "moon-outline" as const },
+  { label: "X\u00FAc \u0111\u1ED9ng", color: "#2196F3", icon: "water-outline" as const },
+];
+
+function getMoodInfo(mood: string | null) {
+  return MOODS.find((m) => m.label === mood) ?? null;
+}
+
+function formatDateVN(dateStr: string): string {
+  try {
+    const date = parseISO(dateStr);
+    return format(date, "d 'th\u00E1ng' M, yyyy", { locale: vi });
+  } catch {
+    return dateStr;
+  }
+}
+
+export default function MemoriesScreen() {
+  const insets = useSafeAreaInsets();
+  const { couple, memories, addMemory, deleteMemory } = useLove();
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [dateText, setDateText] = useState("");
+  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+
+  const topInset = Platform.OS === "web" ? 67 : insets.top;
+  const bottomInset = Platform.OS === "web" ? 34 : insets.bottom;
+
+  const resetForm = () => {
+    setTitle("");
+    setContent("");
+    setDateText("");
+    setSelectedMood(null);
+    setPhotoUri(null);
+  };
+
+  const handleOpenModal = () => {
+    resetForm();
+    setModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    resetForm();
+  };
+
+  const handlePickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!title.trim()) {
+      Alert.alert("L\u1ED7i", "Vui l\u00F2ng nh\u1EADp ti\u00EAu \u0111\u1EC1");
+      return;
+    }
+    if (!dateText.trim()) {
+      Alert.alert("L\u1ED7i", "Vui l\u00F2ng nh\u1EADp ng\u00E0y");
+      return;
+    }
+
+    const parts = dateText.split("/");
+    if (parts.length !== 3) {
+      Alert.alert("L\u1ED7i", "Ng\u00E0y kh\u00F4ng h\u1EE3p l\u1EC7. Vui l\u00F2ng nh\u1EADp theo \u0111\u1ECBnh d\u1EA1ng DD/MM/YYYY");
+      return;
+    }
+    const isoDate = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+
+    try {
+      await addMemory({
+        coupleId: couple!.id,
+        title: title.trim(),
+        content: content.trim() || null,
+        date: isoDate,
+        mood: selectedMood,
+        photoUri: photoUri,
+      });
+      handleCloseModal();
+    } catch {
+      Alert.alert("L\u1ED7i", "Kh\u00F4ng th\u1EC3 l\u01B0u k\u1EF7 ni\u1EC7m. Vui l\u00F2ng th\u1EED l\u1EA1i.");
+    }
+  };
+
+  const handleDeleteMemory = (memory: Memory) => {
+    Alert.alert(
+      "X\u00F3a k\u1EF7 ni\u1EC7m",
+      `B\u1EA1n c\u00F3 ch\u1EAFc mu\u1ED1n x\u00F3a "${memory.title}" kh\u00F4ng?`,
+      [
+        { text: "H\u1EE7y", style: "cancel" },
+        {
+          text: "X\u00F3a",
+          style: "destructive",
+          onPress: () => deleteMemory(memory.id),
+        },
+      ]
+    );
+  };
+
+  if (!couple) {
+    return (
+      <View style={[styles.container, { paddingTop: topInset }]} testID="memories-screen">
+        <View style={styles.noCoupleContainer}>
+          <Ionicons name="heart-dislike-outline" size={64} color={Colors.textSecondary} />
+          <Text style={styles.noCoupleText}>
+            H\u00E3y thi\u1EBFt l\u1EADp th\u00F4ng tin c\u1EB7p \u0111\u00F4i tr\u01B0\u1EDBc
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  const renderMemoryCard = ({ item }: { item: Memory }) => {
+    const moodInfo = getMoodInfo(item.mood ?? null);
+    return (
+      <Pressable
+        style={styles.card}
+        onLongPress={() => handleDeleteMemory(item)}
+      >
+        {item.photoUri && (
+          <Image
+            source={{ uri: item.photoUri }}
+            style={styles.cardPhoto}
+            contentFit="cover"
+          />
+        )}
+        <View style={styles.cardContent}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardDate}>{formatDateVN(item.date)}</Text>
+            {moodInfo && (
+              <View style={[styles.moodDot, { backgroundColor: moodInfo.color }]}>
+                <Ionicons name={moodInfo.icon} size={12} color="#FFF" />
+              </View>
+            )}
+          </View>
+          <Text style={styles.cardTitle}>{item.title}</Text>
+          {item.content ? (
+            <Text style={styles.cardText} numberOfLines={3}>
+              {item.content}
+            </Text>
+          ) : null}
+        </View>
+      </Pressable>
+    );
+  };
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="book-outline" size={64} color={Colors.textSecondary} />
+      <Text style={styles.emptyTitle}>Ch\u01B0a c\u00F3 k\u1EF7 ni\u1EC7m n\u00E0o</Text>
+      <Text style={styles.emptySubtitle}>H\u00E3y th\u00EAm k\u1EF7 ni\u1EC7m \u0111\u1EA7u ti\u00EAn c\u1EE7a b\u1EA1n</Text>
+    </View>
+  );
+
+  return (
+    <View style={styles.container} testID="memories-screen">
+      <LinearGradient
+        colors={[Colors.primary, Colors.primaryLight]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.header, { paddingTop: topInset + 16 }]}
+      >
+        <Text style={styles.headerTitle}>Nh\u1EADt K\u00FD T\u00ECnh Y\u00EAu</Text>
+      </LinearGradient>
+
+      <FlatList
+        data={memories}
+        keyExtractor={(item) => item.id}
+        renderItem={renderMemoryCard}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: bottomInset + 80 },
+        ]}
+        ListEmptyComponent={renderEmptyState}
+        scrollEnabled={!!memories && memories.length > 0}
+        showsVerticalScrollIndicator={false}
+      />
+
+      <Pressable
+        style={[styles.fab, { bottom: bottomInset + 24 }]}
+        onPress={handleOpenModal}
+      >
+        <Ionicons name="add" size={28} color="#FFF" />
+      </Pressable>
+
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={handleCloseModal}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalContainer}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={[styles.modalHeader, { paddingTop: Platform.OS === "web" ? 67 : insets.top + 8 }]}>
+            <Text style={styles.modalTitle}>Th\u00EAm k\u1EF7 ni\u1EC7m</Text>
+            <Pressable onPress={handleCloseModal} style={styles.closeButton}>
+              <Ionicons name="close" size={28} color={Colors.text} />
+            </Pressable>
+          </View>
+
+          <ScrollView
+            style={styles.modalBody}
+            contentContainerStyle={{ paddingBottom: bottomInset + 24 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={styles.inputLabel}>Ti\u00EAu \u0111\u1EC1</Text>
+            <TextInput
+              style={styles.input}
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Nh\u1EADp ti\u00EAu \u0111\u1EC1 k\u1EF7 ni\u1EC7m..."
+              placeholderTextColor={Colors.textSecondary}
+            />
+
+            <Text style={styles.inputLabel}>N\u1ED9i dung</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={content}
+              onChangeText={setContent}
+              placeholder="Vi\u1EBFt v\u1EC1 k\u1EF7 ni\u1EC7m c\u1EE7a b\u1EA1n..."
+              placeholderTextColor={Colors.textSecondary}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+
+            <Text style={styles.inputLabel}>Ng\u00E0y</Text>
+            <TextInput
+              style={styles.input}
+              value={dateText}
+              onChangeText={setDateText}
+              placeholder="DD/MM/YYYY"
+              placeholderTextColor={Colors.textSecondary}
+              keyboardType="numeric"
+            />
+
+            <Text style={styles.inputLabel}>T\u00E2m tr\u1EA1ng</Text>
+            <View style={styles.moodRow}>
+              {MOODS.map((mood) => (
+                <Pressable
+                  key={mood.label}
+                  style={[
+                    styles.moodChip,
+                    {
+                      backgroundColor:
+                        selectedMood === mood.label ? mood.color : Colors.background,
+                      borderColor: mood.color,
+                    },
+                  ]}
+                  onPress={() =>
+                    setSelectedMood(selectedMood === mood.label ? null : mood.label)
+                  }
+                >
+                  <Ionicons
+                    name={mood.icon}
+                    size={14}
+                    color={selectedMood === mood.label ? "#FFF" : mood.color}
+                  />
+                  <Text
+                    style={[
+                      styles.moodChipText,
+                      {
+                        color: selectedMood === mood.label ? "#FFF" : mood.color,
+                      },
+                    ]}
+                  >
+                    {mood.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Pressable style={styles.photoButton} onPress={handlePickImage}>
+              <Ionicons name="image-outline" size={20} color={Colors.primary} />
+              <Text style={styles.photoButtonText}>Ch\u1ECDn \u1EA3nh</Text>
+            </Pressable>
+
+            {photoUri && (
+              <View style={styles.photoPreviewContainer}>
+                <Image
+                  source={{ uri: photoUri }}
+                  style={styles.photoPreview}
+                  contentFit="cover"
+                />
+                <Pressable
+                  style={styles.removePhoto}
+                  onPress={() => setPhotoUri(null)}
+                >
+                  <Ionicons name="close-circle" size={24} color={Colors.heart} />
+                </Pressable>
+              </View>
+            )}
+
+            <Pressable style={styles.saveButton} onPress={handleSave}>
+              <Text style={styles.saveButtonText}>L\u01B0u k\u1EF7 ni\u1EC7m</Text>
+            </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  header: {
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  headerTitle: {
+    fontSize: 26,
+    fontWeight: "bold" as const,
+    color: "#FFF",
+    textAlign: "center",
+  },
+  listContent: {
+    padding: 16,
+  },
+  card: {
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    marginBottom: 16,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+    }),
+  },
+  cardPhoto: {
+    width: "100%",
+    height: 180,
+  },
+  cardContent: {
+    padding: 16,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  cardDate: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  moodDot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "bold" as const,
+    color: Colors.text,
+    marginBottom: 6,
+  },
+  cardText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 80,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "600" as const,
+    color: Colors.text,
+    marginTop: 16,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginTop: 8,
+  },
+  noCoupleContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  noCoupleText: {
+    fontSize: 18,
+    color: Colors.textSecondary,
+    marginTop: 16,
+    textAlign: "center",
+  },
+  fab: {
+    position: "absolute",
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        shadowColor: Colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+      },
+    }),
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "#FFF",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold" as const,
+    color: Colors.text,
+  },
+  closeButton: {
+    position: "absolute",
+    right: 16,
+    top: Platform.OS === "web" ? 67 : undefined,
+    bottom: 8,
+  },
+  modalBody: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  inputLabel: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: Colors.text,
+    backgroundColor: Colors.background,
+    marginBottom: 16,
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: "top",
+  },
+  moodRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 20,
+  },
+  moodChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    gap: 4,
+  },
+  moodChipText: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+  },
+  photoButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    borderRadius: 12,
+    borderStyle: "dashed",
+    marginBottom: 16,
+  },
+  photoButtonText: {
+    fontSize: 15,
+    color: Colors.primary,
+    fontWeight: "500" as const,
+  },
+  photoPreviewContainer: {
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: "hidden",
+    position: "relative",
+  },
+  photoPreview: {
+    width: "100%",
+    height: 200,
+    borderRadius: 12,
+  },
+  removePhoto: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+  },
+  saveButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  saveButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold" as const,
+  },
+});
