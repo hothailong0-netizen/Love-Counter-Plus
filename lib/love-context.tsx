@@ -58,7 +58,7 @@ export function LoveProvider({ children }: { children: ReactNode }) {
 
   const updateCoupleMutation = useMutation({
     mutationFn: async (data: Partial<InsertCouple>) => {
-      await apiRequest("PATCH", `/api/couple/${coupleId}`, data);
+      await apiRequest("PUT", `/api/couple/${coupleId}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/couple"] });

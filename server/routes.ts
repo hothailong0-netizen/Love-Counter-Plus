@@ -16,10 +16,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/couple", async (_req, res) => {
     try {
       const couple = await getFirstCouple();
-      if (!couple) {
-        return res.status(404).json({ message: "No couple found" });
-      }
-      res.json(couple);
+      res.json(couple || null);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
     }

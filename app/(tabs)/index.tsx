@@ -152,7 +152,7 @@ function SetupScreen() {
           <PulsingHeart size={72} />
         </View>
 
-        <Text style={styles.setupTitle}>{"Dem Ngay Yeu".replace("Dem", "\u0110\u1ebfm").replace("Ngay", "Ng\u00e0y").replace("Yeu", "Y\u00eau")}</Text>
+        <Text style={styles.setupTitle}>{"\u0110\u1ebfm Ng\u00e0y Y\u00eau"}</Text>
         <Text style={styles.setupSubtitle}>
           H\u00e3y b\u1eaft \u0111\u1ea7u h\u00e0nh tr\u00ecnh t\u00ecnh y\u00eau c\u1ee7a b\u1ea1n
         </Text>
