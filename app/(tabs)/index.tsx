@@ -152,9 +152,9 @@ function SetupScreen() {
           <PulsingHeart size={72} />
         </View>
 
-        <Text style={styles.setupTitle}>{"\u0110\u1ebfm Ng\u00e0y Y\u00eau"}</Text>
+        <Text style={styles.setupTitle}>Đếm Ngày Yêu</Text>
         <Text style={styles.setupSubtitle}>
-          H\u00e3y b\u1eaft \u0111\u1ea7u h\u00e0nh tr\u00ecnh t\u00ecnh y\u00eau c\u1ee7a b\u1ea1n
+          Hãy bắt đầu hành trình tình yêu của bạn
         </Text>
 
         <View style={styles.setupForm}>
@@ -167,7 +167,7 @@ function SetupScreen() {
             />
             <TextInput
               style={styles.textInput}
-              placeholder="T\u00ean b\u1ea1n"
+              placeholder="Tên bạn"
               placeholderTextColor="rgba(255,255,255,0.5)"
               value={partner1}
               onChangeText={setPartner1}
@@ -183,7 +183,7 @@ function SetupScreen() {
             />
             <TextInput
               style={styles.textInput}
-              placeholder="T\u00ean ng\u01b0\u1eddi \u1ea5y"
+              placeholder="Tên người ấy"
               placeholderTextColor="rgba(255,255,255,0.5)"
               value={partner2}
               onChangeText={setPartner2}
@@ -199,7 +199,7 @@ function SetupScreen() {
             />
             <TextInput
               style={styles.textInput}
-              placeholder="Ng\u00e0y b\u1eaft \u0111\u1ea7u (DD/MM/YYYY)"
+              placeholder="Ngày bắt đầu (DD/MM/YYYY)"
               placeholderTextColor="rgba(255,255,255,0.5)"
               value={dateText}
               onChangeText={setDateText}
@@ -218,7 +218,7 @@ function SetupScreen() {
             ) : (
               <>
                 <Ionicons name="heart" size={20} color="#fff" />
-                <Text style={styles.createButtonText}>B\u1eaft \u0111\u1ea7u</Text>
+                <Text style={styles.createButtonText}>Bắt đầu</Text>
               </>
             )}
           </TouchableOpacity>
@@ -339,29 +339,29 @@ export default function HomeScreen() {
           </View>
 
           <Text style={styles.bigNumber}>{daysInLove}</Text>
-          <Text style={styles.bigLabel}>ng\u00e0y y\u00eau nhau</Text>
+          <Text style={styles.bigLabel}>ngày yêu nhau</Text>
 
           <View style={styles.card}>
             <View style={styles.cardRow}>
               <Ionicons name="time-outline" size={18} color="rgba(255,255,255,0.7)" />
-              <Text style={styles.cardTitle}>Th\u1eddi gian b\u00ean nhau</Text>
+              <Text style={styles.cardTitle}>Thời gian bên nhau</Text>
             </View>
             <Text style={styles.breakdownText}>
               {yearsInLove > 0
-                ? `${yearsInLove} n\u0103m, ${remainingMonths} th\u00e1ng, ${displayDays} ng\u00e0y`
+                ? `${yearsInLove} năm, ${remainingMonths} tháng, ${displayDays} ngày`
                 : remainingMonths > 0
-                ? `${remainingMonths} th\u00e1ng, ${displayDays} ng\u00e0y`
-                : `${daysInLove} ng\u00e0y`}
+                ? `${remainingMonths} tháng, ${displayDays} ngày`
+                : `${daysInLove} ngày`}
             </Text>
             <Text style={styles.breakdownSubText}>
-              {displayHours} gi\u1edd, {displayMinutes} ph\u00fat, {displaySeconds} gi\u00e2y b\u00ean nhau
+              {displayHours} giờ, {displayMinutes} phút, {displaySeconds} giây bên nhau
             </Text>
           </View>
 
           <View style={styles.card}>
             <View style={styles.cardRow}>
               <Ionicons name="chatbubble-ellipses-outline" size={18} color="rgba(255,255,255,0.7)" />
-              <Text style={styles.cardTitle}>L\u1eddi y\u00eau h\u00f4m nay</Text>
+              <Text style={styles.cardTitle}>Lời yêu hôm nay</Text>
             </View>
             <View style={styles.quoteContainer}>
               <Ionicons
@@ -378,12 +378,12 @@ export default function HomeScreen() {
             <View style={styles.card}>
               <View style={styles.cardRow}>
                 <Ionicons name="flag-outline" size={18} color="rgba(255,255,255,0.7)" />
-                <Text style={styles.cardTitle}>C\u1ed9t m\u1ed1c ti\u1ebfp theo</Text>
+                <Text style={styles.cardTitle}>Cột mốc tiếp theo</Text>
               </View>
               <Text style={styles.milestoneLabel}>{nextMilestone.label}</Text>
               <Text style={styles.milestoneDesc}>{nextMilestone.description}</Text>
               <Text style={styles.milestoneDays}>
-                C\u00f2n {daysToMilestone} ng\u00e0y n\u1eefa
+                Còn {daysToMilestone} ngày nữa
               </Text>
               <View style={styles.progressBarBg}>
                 <View
@@ -399,7 +399,7 @@ export default function HomeScreen() {
           <View style={styles.startDateContainer}>
             <Ionicons name="calendar-outline" size={16} color="rgba(255,255,255,0.5)" />
             <Text style={styles.startDateText}>
-              B\u1eaft \u0111\u1ea7u t\u1eeb: {formattedStartDate}
+              Bắt đầu từ: {formattedStartDate}
             </Text>
           </View>
         </ScrollView>

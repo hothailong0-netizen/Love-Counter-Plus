@@ -65,7 +65,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Trang ch\u1EE7",
+          title: "Trang chủ",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="heart" size={size} color={color} />
           ),
@@ -74,7 +74,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="memories"
         options={{
-          title: "Nh\u1EADt k\u00FD",
+          title: "Nhật ký",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="book" size={size} color={color} />
           ),
@@ -83,7 +83,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="milestones"
         options={{
-          title: "C\u1ED9t m\u1ED1c",
+          title: "Cột mốc",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="star" size={size} color={color} />
           ),
@@ -92,7 +92,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "C\u00E0i \u0111\u1EB7t",
+          title: "Cài đặt",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings" size={size} color={color} />
           ),

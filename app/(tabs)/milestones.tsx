@@ -20,7 +20,7 @@ export default function MilestonesScreen() {
         <View style={styles.noCoupleContainer}>
           <Ionicons name="heart-dislike-outline" size={64} color={Colors.textSecondary} />
           <Text style={styles.noCoupleText}>
-            H\u00e3y thi\u1ebft l\u1eadp th\u00f4ng tin c\u1eb7p \u0111\u00f4i tr\u01b0\u1edbc
+            Hãy thiết lập thông tin cặp đôi trước
           </Text>
         </View>
       </View>
@@ -35,7 +35,7 @@ export default function MilestonesScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: topInset + 16 }]}
       >
-        <Text style={styles.headerTitle}>C\u1ed9t M\u1ed1c T\u00ecnh Y\u00eau</Text>
+        <Text style={styles.headerTitle}>Cột Mốc Tình Yêu</Text>
       </LinearGradient>
 
       <ScrollView
@@ -110,12 +110,12 @@ export default function MilestonesScreen() {
                 {isToday && (
                   <View style={styles.todayBadge}>
                     <Ionicons name="sparkles" size={14} color={Colors.gold} />
-                    <Text style={styles.todayBadgeText}>H\u00f4m nay</Text>
+                    <Text style={styles.todayBadgeText}>Hôm nay</Text>
                   </View>
                 )}
                 {!isReached && (
                   <Text style={styles.remainingText}>
-                    C\u00f2n {daysRemaining} ng\u00e0y
+                    Còn {daysRemaining} ngày
                   </Text>
                 )}
               </View>

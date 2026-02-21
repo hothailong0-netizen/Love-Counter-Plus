@@ -26,10 +26,10 @@ import type { Memory } from "@shared/schema";
 
 const MOODS = [
   { label: "Vui", color: "#4CAF50", icon: "happy-outline" as const },
-  { label: "H\u1EA1nh ph\u00FAc", color: "#FF9800", icon: "heart-outline" as const },
-  { label: "L\u00E3ng m\u1EA1n", color: Colors.primary, icon: "rose-outline" as const },
-  { label: "Nh\u1EDB nhung", color: "#9C27B0", icon: "moon-outline" as const },
-  { label: "X\u00FAc \u0111\u1ED9ng", color: "#2196F3", icon: "water-outline" as const },
+  { label: "Hạnh phúc", color: "#FF9800", icon: "heart-outline" as const },
+  { label: "Lãng mạn", color: Colors.primary, icon: "rose-outline" as const },
+  { label: "Nhớ nhung", color: "#9C27B0", icon: "moon-outline" as const },
+  { label: "Xúc động", color: "#2196F3", icon: "water-outline" as const },
 ];
 
 function getMoodInfo(mood: string | null) {
@@ -39,7 +39,7 @@ function getMoodInfo(mood: string | null) {
 function formatDateVN(dateStr: string): string {
   try {
     const date = parseISO(dateStr);
-    return format(date, "d 'th\u00E1ng' M, yyyy", { locale: vi });
+    return format(date, "d 'tháng' M, yyyy", { locale: vi });
   } catch {
     return dateStr;
   }

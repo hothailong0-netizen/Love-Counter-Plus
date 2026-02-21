@@ -21,10 +21,10 @@ import Colors from "@/constants/colors";
 import type { ImportantDate } from "@shared/schema";
 
 const DATE_TYPES = [
-  { label: "Sinh nh\u1eadt", value: "birthday", color: Colors.primary },
-  { label: "K\u1ef7 ni\u1ec7m", value: "anniversary", color: Colors.gold },
-  { label: "\u0110\u1eb7c bi\u1ec7t", value: "special", color: Colors.success },
-  { label: "Kh\u00e1c", value: "other", color: Colors.textSecondary },
+  { label: "Sinh nhật", value: "birthday", color: Colors.primary },
+  { label: "Kỷ niệm", value: "anniversary", color: Colors.gold },
+  { label: "Đặc biệt", value: "special", color: Colors.success },
+  { label: "Khác", value: "other", color: Colors.textSecondary },
 ];
 
 function getTypeBadge(type: string) {
@@ -34,7 +34,7 @@ function getTypeBadge(type: string) {
 function formatDateVN(dateStr: string): string {
   try {
     const date = parseISO(dateStr);
-    return format(date, "d 'th\u00e1ng' M, yyyy", { locale: vi });
+    return format(date, "d 'tháng' M, yyyy", { locale: vi });
   } catch {
     return dateStr;
   }
@@ -153,7 +153,7 @@ export default function SettingsScreen() {
         <View style={styles.noCoupleContainer}>
           <Ionicons name="heart-dislike-outline" size={64} color={Colors.textSecondary} />
           <Text style={styles.noCoupleText}>
-            H\u00e3y thi\u1ebft l\u1eadp th\u00f4ng tin c\u1eb7p \u0111\u00f4i tr\u01b0\u1edbc
+            Hãy thiết lập thông tin cặp đôi trước
           </Text>
         </View>
       </View>
@@ -170,7 +170,7 @@ export default function SettingsScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: topInset + 16 }]}
       >
-        <Text style={styles.headerTitle}>C\u00e0i \u0110\u1eb7t</Text>
+        <Text style={styles.headerTitle}>Cài Đặt</Text>
       </LinearGradient>
 
       <ScrollView
@@ -181,7 +181,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="people-outline" size={20} color={Colors.text} />
-            <Text style={styles.sectionTitle}>Th\u00f4ng tin c\u1eb7p \u0111\u00f4i</Text>
+            <Text style={styles.sectionTitle}>Thông tin cặp đôi</Text>
             <Pressable onPress={openEditModal} style={styles.editButton}>
               <Ionicons name="create-outline" size={20} color={Colors.primary} />
             </Pressable>
@@ -189,19 +189,19 @@ export default function SettingsScreen() {
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Ionicons name="person-outline" size={18} color={Colors.textSecondary} />
-              <Text style={styles.infoLabel}>Ng\u01b0\u1eddi 1</Text>
+              <Text style={styles.infoLabel}>Người 1</Text>
               <Text style={styles.infoValue}>{couple.partner1Name}</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.infoRow}>
               <Ionicons name="person-outline" size={18} color={Colors.textSecondary} />
-              <Text style={styles.infoLabel}>Ng\u01b0\u1eddi 2</Text>
+              <Text style={styles.infoLabel}>Người 2</Text>
               <Text style={styles.infoValue}>{couple.partner2Name}</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.infoRow}>
               <Ionicons name="calendar-outline" size={18} color={Colors.textSecondary} />
-              <Text style={styles.infoLabel}>Ng\u00e0y b\u1eaft \u0111\u1ea7u</Text>
+              <Text style={styles.infoLabel}>Ngày bắt đầu</Text>
               <Text style={styles.infoValue}>{formatDateVN(couple.startDate)}</Text>
             </View>
           </View>
@@ -210,7 +210,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="calendar-outline" size={20} color={Colors.text} />
-            <Text style={styles.sectionTitle}>Ng\u00e0y Quan Tr\u1ecdng</Text>
+            <Text style={styles.sectionTitle}>Ngày Quan Trọng</Text>
             <Pressable onPress={openAddDateModal} style={styles.editButton}>
               <Ionicons name="add-circle-outline" size={22} color={Colors.primary} />
             </Pressable>
@@ -219,7 +219,7 @@ export default function SettingsScreen() {
           {importantDates.length === 0 ? (
             <View style={styles.emptyDates}>
               <Ionicons name="calendar-outline" size={40} color={Colors.textSecondary} />
-              <Text style={styles.emptyDatesText}>Ch\u01b0a c\u00f3 ng\u00e0y quan tr\u1ecdng n\u00e0o</Text>
+              <Text style={styles.emptyDatesText}>Chưa có ngày quan trọng nào</Text>
             </View>
           ) : (
             importantDates.map((item) => {
@@ -245,28 +245,28 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="stats-chart-outline" size={20} color={Colors.text} />
-            <Text style={styles.sectionTitle}>Th\u1ed1ng k\u00ea t\u00ecnh y\u00eau</Text>
+            <Text style={styles.sectionTitle}>Thống kê tình yêu</Text>
           </View>
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
               <Ionicons name="heart" size={24} color={Colors.heart} />
               <Text style={styles.statNumber}>{daysInLove}</Text>
-              <Text style={styles.statLabel}>Ng\u00e0y y\u00eau</Text>
+              <Text style={styles.statLabel}>Ngày yêu</Text>
             </View>
             <View style={styles.statCard}>
               <Ionicons name="book" size={24} color={Colors.primary} />
               <Text style={styles.statNumber}>{memories.length}</Text>
-              <Text style={styles.statLabel}>K\u1ef7 ni\u1ec7m</Text>
+              <Text style={styles.statLabel}>Kỷ niệm</Text>
             </View>
             <View style={styles.statCard}>
               <Ionicons name="images" size={24} color={Colors.success} />
               <Text style={styles.statNumber}>{photosCount}</Text>
-              <Text style={styles.statLabel}>\u1ea2nh</Text>
+              <Text style={styles.statLabel}>Ảnh</Text>
             </View>
             <View style={styles.statCard}>
               <Ionicons name="calendar" size={24} color={Colors.gold} />
               <Text style={styles.statNumber}>{importantDates.length}</Text>
-              <Text style={styles.statLabel}>Ng\u00e0y quan tr\u1ecdng</Text>
+              <Text style={styles.statLabel}>Ngày quan trọng</Text>
             </View>
           </View>
         </View>
@@ -280,7 +280,7 @@ export default function SettingsScreen() {
       >
         <View style={[styles.modalContainer, { paddingTop: Platform.OS === "web" ? 67 : insets.top + 8 }]}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Ch\u1ec9nh s\u1eeda th\u00f4ng tin</Text>
+            <Text style={styles.modalTitle}>Chỉnh sửa thông tin</Text>
             <Pressable onPress={() => setEditModalVisible(false)}>
               <Ionicons name="close" size={28} color={Colors.text} />
             </Pressable>
@@ -291,25 +291,25 @@ export default function SettingsScreen() {
             contentContainerStyle={{ paddingBottom: bottomInset + 24 }}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.inputLabel}>T\u00ean ng\u01b0\u1eddi 1</Text>
+            <Text style={styles.inputLabel}>Tên người 1</Text>
             <TextInput
               style={styles.input}
               value={editPartner1}
               onChangeText={setEditPartner1}
-              placeholder="Nh\u1eadp t\u00ean..."
+              placeholder="Nhập tên..."
               placeholderTextColor={Colors.textSecondary}
             />
 
-            <Text style={styles.inputLabel}>T\u00ean ng\u01b0\u1eddi 2</Text>
+            <Text style={styles.inputLabel}>Tên người 2</Text>
             <TextInput
               style={styles.input}
               value={editPartner2}
               onChangeText={setEditPartner2}
-              placeholder="Nh\u1eadp t\u00ean..."
+              placeholder="Nhập tên..."
               placeholderTextColor={Colors.textSecondary}
             />
 
-            <Text style={styles.inputLabel}>Ng\u00e0y b\u1eaft \u0111\u1ea7u</Text>
+            <Text style={styles.inputLabel}>Ngày bắt đầu</Text>
             <TextInput
               style={styles.input}
               value={editDateText}
@@ -321,7 +321,7 @@ export default function SettingsScreen() {
 
             <Pressable style={styles.saveButton} onPress={handleSaveCouple}>
               <Ionicons name="checkmark" size={20} color="#FFF" />
-              <Text style={styles.saveButtonText}>L\u01b0u thay \u0111\u1ed5i</Text>
+              <Text style={styles.saveButtonText}>Lưu thay đổi</Text>
             </Pressable>
           </ScrollView>
         </View>
@@ -335,7 +335,7 @@ export default function SettingsScreen() {
       >
         <View style={[styles.modalContainer, { paddingTop: Platform.OS === "web" ? 67 : insets.top + 8 }]}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Th\u00eam ng\u00e0y quan tr\u1ecdng</Text>
+            <Text style={styles.modalTitle}>Thêm ngày quan trọng</Text>
             <Pressable onPress={() => setAddDateModalVisible(false)}>
               <Ionicons name="close" size={28} color={Colors.text} />
             </Pressable>
@@ -346,16 +346,16 @@ export default function SettingsScreen() {
             contentContainerStyle={{ paddingBottom: bottomInset + 24 }}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.inputLabel}>T\u00ean s\u1ef1 ki\u1ec7n</Text>
+            <Text style={styles.inputLabel}>Tên sự kiện</Text>
             <TextInput
               style={styles.input}
               value={newDateTitle}
               onChangeText={setNewDateTitle}
-              placeholder="V\u00ed d\u1ee5: Sinh nh\u1eadt anh..."
+              placeholder="Ví dụ: Sinh nhật anh..."
               placeholderTextColor={Colors.textSecondary}
             />
 
-            <Text style={styles.inputLabel}>Ng\u00e0y</Text>
+            <Text style={styles.inputLabel}>Ngày</Text>
             <TextInput
               style={styles.input}
               value={newDateText}
@@ -365,7 +365,7 @@ export default function SettingsScreen() {
               keyboardType="numeric"
             />
 
-            <Text style={styles.inputLabel}>Lo\u1ea1i s\u1ef1 ki\u1ec7n</Text>
+            <Text style={styles.inputLabel}>Loại sự kiện</Text>
             <View style={styles.typeRow}>
               {DATE_TYPES.map((type) => (
                 <Pressable
@@ -393,7 +393,7 @@ export default function SettingsScreen() {
 
             <Pressable style={styles.saveButton} onPress={handleAddDate}>
               <Ionicons name="add" size={20} color="#FFF" />
-              <Text style={styles.saveButtonText}>Th\u00eam ng\u00e0y</Text>
+              <Text style={styles.saveButtonText}>Thêm ngày</Text>
             </Pressable>
           </ScrollView>
         </View>
