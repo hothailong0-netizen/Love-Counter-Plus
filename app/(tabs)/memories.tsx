@@ -90,17 +90,17 @@ export default function MemoriesScreen() {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert("L\u1ED7i", "Vui l\u00F2ng nh\u1EADp ti\u00EAu \u0111\u1EC1");
+      Alert.alert("Lỗi", "Vui lòng nhập tiêu đề");
       return;
     }
     if (!dateText.trim()) {
-      Alert.alert("L\u1ED7i", "Vui l\u00F2ng nh\u1EADp ng\u00E0y");
+      Alert.alert("Lỗi", "Vui lòng nhập ngày");
       return;
     }
 
     const parts = dateText.split("/");
     if (parts.length !== 3) {
-      Alert.alert("L\u1ED7i", "Ng\u00E0y kh\u00F4ng h\u1EE3p l\u1EC7. Vui l\u00F2ng nh\u1EADp theo \u0111\u1ECBnh d\u1EA1ng DD/MM/YYYY");
+      Alert.alert("Lỗi", "Ngày không hợp lệ. Vui lòng nhập theo định dạng DD/MM/YYYY");
       return;
     }
     const isoDate = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
@@ -116,18 +116,18 @@ export default function MemoriesScreen() {
       });
       handleCloseModal();
     } catch {
-      Alert.alert("L\u1ED7i", "Kh\u00F4ng th\u1EC3 l\u01B0u k\u1EF7 ni\u1EC7m. Vui l\u00F2ng th\u1EED l\u1EA1i.");
+      Alert.alert("Lỗi", "Không thể lưu kỷ niệm. Vui lòng thử lại.");
     }
   };
 
   const handleDeleteMemory = (memory: Memory) => {
     Alert.alert(
-      "X\u00F3a k\u1EF7 ni\u1EC7m",
-      `B\u1EA1n c\u00F3 ch\u1EAFc mu\u1ED1n x\u00F3a "${memory.title}" kh\u00F4ng?`,
+      "Xóa kỷ niệm",
+      `Bạn có chắc muốn xóa "${memory.title}" không?`,
       [
-        { text: "H\u1EE7y", style: "cancel" },
+        { text: "Hủy", style: "cancel" },
         {
-          text: "X\u00F3a",
+          text: "Xóa",
           style: "destructive",
           onPress: () => deleteMemory(memory.id),
         },
@@ -141,7 +141,7 @@ export default function MemoriesScreen() {
         <View style={styles.noCoupleContainer}>
           <Ionicons name="heart-dislike-outline" size={64} color={Colors.textSecondary} />
           <Text style={styles.noCoupleText}>
-            H\u00E3y thi\u1EBFt l\u1EADp th\u00F4ng tin c\u1EB7p \u0111\u00F4i tr\u01B0\u1EDBc
+            Hãy thiết lập thông tin cặp đôi trước
           </Text>
         </View>
       </View>
@@ -185,8 +185,8 @@ export default function MemoriesScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <Ionicons name="book-outline" size={64} color={Colors.textSecondary} />
-      <Text style={styles.emptyTitle}>Ch\u01B0a c\u00F3 k\u1EF7 ni\u1EC7m n\u00E0o</Text>
-      <Text style={styles.emptySubtitle}>H\u00E3y th\u00EAm k\u1EF7 ni\u1EC7m \u0111\u1EA7u ti\u00EAn c\u1EE7a b\u1EA1n</Text>
+      <Text style={styles.emptyTitle}>Chưa có kỷ niệm nào</Text>
+      <Text style={styles.emptySubtitle}>Hãy thêm kỷ niệm đầu tiên của bạn</Text>
     </View>
   );
 
@@ -198,7 +198,7 @@ export default function MemoriesScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: topInset + 16 }]}
       >
-        <Text style={styles.headerTitle}>Nh\u1EADt K\u00FD T\u00ECnh Y\u00EAu</Text>
+        <Text style={styles.headerTitle}>Nhật Ký Tình Yêu</Text>
       </LinearGradient>
 
       <FlatList
@@ -232,7 +232,7 @@ export default function MemoriesScreen() {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           <View style={[styles.modalHeader, { paddingTop: Platform.OS === "web" ? 67 : insets.top + 8 }]}>
-            <Text style={styles.modalTitle}>Th\u00EAm k\u1EF7 ni\u1EC7m</Text>
+            <Text style={styles.modalTitle}>Thêm kỷ niệm</Text>
             <Pressable onPress={handleCloseModal} style={styles.closeButton}>
               <Ionicons name="close" size={28} color={Colors.text} />
             </Pressable>
@@ -243,28 +243,28 @@ export default function MemoriesScreen() {
             contentContainerStyle={{ paddingBottom: bottomInset + 24 }}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.inputLabel}>Ti\u00EAu \u0111\u1EC1</Text>
+            <Text style={styles.inputLabel}>Tiêu đề</Text>
             <TextInput
               style={styles.input}
               value={title}
               onChangeText={setTitle}
-              placeholder="Nh\u1EADp ti\u00EAu \u0111\u1EC1 k\u1EF7 ni\u1EC7m..."
+              placeholder="Nhập tiêu đề kỷ niệm..."
               placeholderTextColor={Colors.textSecondary}
             />
 
-            <Text style={styles.inputLabel}>N\u1ED9i dung</Text>
+            <Text style={styles.inputLabel}>Nội dung</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={content}
               onChangeText={setContent}
-              placeholder="Vi\u1EBFt v\u1EC1 k\u1EF7 ni\u1EC7m c\u1EE7a b\u1EA1n..."
+              placeholder="Viết về kỷ niệm của bạn..."
               placeholderTextColor={Colors.textSecondary}
               multiline
               numberOfLines={4}
               textAlignVertical="top"
             />
 
-            <Text style={styles.inputLabel}>Ng\u00E0y</Text>
+            <Text style={styles.inputLabel}>Ngày</Text>
             <TextInput
               style={styles.input}
               value={dateText}
@@ -274,7 +274,7 @@ export default function MemoriesScreen() {
               keyboardType="numeric"
             />
 
-            <Text style={styles.inputLabel}>T\u00E2m tr\u1EA1ng</Text>
+            <Text style={styles.inputLabel}>Tâm trạng</Text>
             <View style={styles.moodRow}>
               {MOODS.map((mood) => (
                 <Pressable
@@ -312,7 +312,7 @@ export default function MemoriesScreen() {
 
             <Pressable style={styles.photoButton} onPress={handlePickImage}>
               <Ionicons name="image-outline" size={20} color={Colors.primary} />
-              <Text style={styles.photoButtonText}>Ch\u1ECDn \u1EA3nh</Text>
+              <Text style={styles.photoButtonText}>Chọn ảnh</Text>
             </Pressable>
 
             {photoUri && (
@@ -332,7 +332,7 @@ export default function MemoriesScreen() {
             )}
 
             <Pressable style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.saveButtonText}>L\u01B0u k\u1EF7 ni\u1EC7m</Text>
+              <Text style={styles.saveButtonText}>Lưu kỷ niệm</Text>
             </Pressable>
           </ScrollView>
         </KeyboardAvoidingView>

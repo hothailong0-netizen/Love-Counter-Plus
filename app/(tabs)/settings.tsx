@@ -76,12 +76,12 @@ export default function SettingsScreen() {
 
   const handleSaveCouple = async () => {
     if (!editPartner1.trim() || !editPartner2.trim() || !editDateText.trim()) {
-      Alert.alert("L\u1ed7i", "Vui l\u00f2ng \u0111i\u1ec1n \u0111\u1ea7y \u0111\u1ee7 th\u00f4ng tin");
+      Alert.alert("Lỗi", "Vui lòng điền đầy đủ thông tin");
       return;
     }
     const parts = editDateText.split("/");
     if (parts.length !== 3) {
-      Alert.alert("L\u1ed7i", "Ng\u00e0y kh\u00f4ng h\u1ee3p l\u1ec7. Vui l\u00f2ng nh\u1eadp theo \u0111\u1ecbnh d\u1ea1ng DD/MM/YYYY");
+      Alert.alert("Lỗi", "Ngày không hợp lệ. Vui lòng nhập theo định dạng DD/MM/YYYY");
       return;
     }
     const isoDate = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
@@ -93,7 +93,7 @@ export default function SettingsScreen() {
       });
       setEditModalVisible(false);
     } catch {
-      Alert.alert("L\u1ed7i", "Kh\u00f4ng th\u1ec3 c\u1eadp nh\u1eadt. Vui l\u00f2ng th\u1eed l\u1ea1i.");
+      Alert.alert("Lỗi", "Không thể cập nhật. Vui lòng thử lại.");
     }
   };
 
@@ -106,16 +106,16 @@ export default function SettingsScreen() {
 
   const handleAddDate = async () => {
     if (!newDateTitle.trim()) {
-      Alert.alert("L\u1ed7i", "Vui l\u00f2ng nh\u1eadp t\u00ean s\u1ef1 ki\u1ec7n");
+      Alert.alert("Lỗi", "Vui lòng nhập tên sự kiện");
       return;
     }
     if (!newDateText.trim()) {
-      Alert.alert("L\u1ed7i", "Vui l\u00f2ng nh\u1eadp ng\u00e0y");
+      Alert.alert("Lỗi", "Vui lòng nhập ngày");
       return;
     }
     const parts = newDateText.split("/");
     if (parts.length !== 3) {
-      Alert.alert("L\u1ed7i", "Ng\u00e0y kh\u00f4ng h\u1ee3p l\u1ec7. Vui l\u00f2ng nh\u1eadp theo \u0111\u1ecbnh d\u1ea1ng DD/MM/YYYY");
+      Alert.alert("Lỗi", "Ngày không hợp lệ. Vui lòng nhập theo định dạng DD/MM/YYYY");
       return;
     }
     const isoDate = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
@@ -128,18 +128,18 @@ export default function SettingsScreen() {
       });
       setAddDateModalVisible(false);
     } catch {
-      Alert.alert("L\u1ed7i", "Kh\u00f4ng th\u1ec3 th\u00eam ng\u00e0y. Vui l\u00f2ng th\u1eed l\u1ea1i.");
+      Alert.alert("Lỗi", "Không thể thêm ngày. Vui lòng thử lại.");
     }
   };
 
   const handleDeleteDate = (item: ImportantDate) => {
     Alert.alert(
-      "X\u00f3a ng\u00e0y quan tr\u1ecdng",
-      `B\u1ea1n c\u00f3 ch\u1eafc mu\u1ed1n x\u00f3a "${item.title}" kh\u00f4ng?`,
+      "Xóa ngày quan trọng",
+      `Bạn có chắc muốn xóa "${item.title}" không?`,
       [
-        { text: "H\u1ee7y", style: "cancel" },
+        { text: "Hủy", style: "cancel" },
         {
-          text: "X\u00f3a",
+          text: "Xóa",
           style: "destructive",
           onPress: () => deleteImportantDate(item.id),
         },
