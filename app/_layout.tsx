@@ -7,21 +7,44 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
 import { LoveProvider } from "@/lib/love-context";
+import { 
+  useFonts, 
+  Nunito_400Regular, 
+  Nunito_600SemiBold, 
+  Nunito_700Bold, 
+  Nunito_800ExtraBold 
+} from "@expo-google-fonts/nunito";
 
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerBackTitle: "Quay l\u1EA1i" }}>
+    <Stack screenOptions={{ 
+      headerBackTitle: "Quay lại",
+      headerTitleStyle: { fontFamily: 'Nunito_700Bold' }
+    }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+  });
+
   useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   return (
     <ErrorBoundary>

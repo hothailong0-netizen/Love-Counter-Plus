@@ -412,6 +412,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   headerTitle: {
+    fontFamily: "Nunito_700Bold",
     fontSize: 26,
     fontWeight: "bold" as const,
     color: "#FFF",
@@ -427,6 +428,7 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   noCoupleText: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 18,
     color: Colors.textSecondary,
     marginTop: 16,
@@ -442,6 +444,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
+    fontFamily: "Nunito_700Bold",
     fontSize: 18,
     fontWeight: "700" as const,
     color: Colors.text,
@@ -477,11 +480,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   infoLabel: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 14,
     color: Colors.textSecondary,
     width: 80,
   },
   infoValue: {
+    fontFamily: "Nunito_600SemiBold",
     flex: 1,
     fontSize: 15,
     fontWeight: "600" as const,
@@ -521,11 +526,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   dateCardTitle: {
+    fontFamily: "Nunito_600SemiBold",
     fontSize: 16,
     fontWeight: "600" as const,
     color: Colors.text,
   },
   dateCardDate: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 13,
     color: Colors.textSecondary,
   },
@@ -538,6 +545,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   typeBadgeText: {
+    fontFamily: "Nunito_600SemiBold",
     fontSize: 12,
     fontWeight: "600" as const,
   },
@@ -547,6 +555,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyDatesText: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 15,
     color: Colors.textSecondary,
   },
@@ -580,11 +589,13 @@ const styles = StyleSheet.create({
     }),
   },
   statNumber: {
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 24,
     fontWeight: "800" as const,
     color: Colors.text,
   },
   statLabel: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 13,
     color: Colors.textSecondary,
     textAlign: "center" as const,
@@ -603,6 +614,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   modalTitle: {
+    fontFamily: "Nunito_700Bold",
     fontSize: 20,
     fontWeight: "bold" as const,
     color: Colors.text,
@@ -613,12 +625,14 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   inputLabel: {
+    fontFamily: "Nunito_600SemiBold",
     fontSize: 15,
     fontWeight: "600" as const,
     color: Colors.text,
     marginBottom: 8,
   },
   input: {
+    fontFamily: "Nunito_400Regular",
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 12,
@@ -642,6 +656,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   typeChipText: {
+    fontFamily: "Nunito_600SemiBold",
     fontSize: 14,
     fontWeight: "600" as const,
   },
@@ -656,6 +671,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   saveButtonText: {
+    fontFamily: "Nunito_700Bold",
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold" as const,

@@ -137,6 +137,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   headerTitle: {
+    fontFamily: "Nunito_700Bold",
     fontSize: 26,
     fontWeight: "bold" as const,
     color: "#FFF",
@@ -153,6 +154,7 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   noCoupleText: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 18,
     color: Colors.textSecondary,
     marginTop: 16,
@@ -245,6 +247,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   cardLabel: {
+    fontFamily: "Nunito_700Bold",
     fontSize: 18,
     fontWeight: "700" as const,
     color: Colors.text,
@@ -253,6 +256,7 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   cardLabelToday: {
+    fontFamily: "Nunito_800ExtraBold",
     color: Colors.gold,
     fontSize: 20,
     fontWeight: "800" as const,
@@ -261,6 +265,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   cardDescription: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 14,
     color: Colors.textSecondary,
     lineHeight: 20,
@@ -281,11 +286,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   todayBadgeText: {
+    fontFamily: "Nunito_600SemiBold",
     fontSize: 13,
     fontWeight: "600" as const,
     color: Colors.gold,
   },
   remainingText: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 13,
     color: Colors.textSecondary,
     fontStyle: "italic" as const,

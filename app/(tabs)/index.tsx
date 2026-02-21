@@ -424,6 +424,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   setupTitle: {
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 32,
     fontWeight: "800" as const,
     color: "#fff",
@@ -432,6 +433,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   setupSubtitle: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 16,
     color: "rgba(255,255,255,0.75)",
     textAlign: "center" as const,
@@ -455,6 +457,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   textInput: {
+    fontFamily: "Nunito_400Regular",
     flex: 1,
     height: 52,
     color: "#fff",
@@ -484,6 +487,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   createButtonText: {
+    fontFamily: "Nunito_700Bold",
     color: "#fff",
     fontSize: 18,
     fontWeight: "700" as const,
@@ -501,6 +505,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap" as const,
   },
   partnerName: {
+    fontFamily: "Nunito_700Bold",
     fontSize: 20,
     fontWeight: "700" as const,
     color: "#fff",
@@ -523,6 +528,7 @@ const styles = StyleSheet.create({
     bottom: 20,
   },
   bigNumber: {
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 72,
     fontWeight: "900" as const,
     color: "#fff",
@@ -539,6 +545,7 @@ const styles = StyleSheet.create({
     }),
   },
   bigLabel: {
+    fontFamily: "Nunito_600SemiBold",
     fontSize: 18,
     color: "rgba(255,255,255,0.8)",
     fontWeight: "500" as const,
@@ -572,6 +579,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cardTitle: {
+    fontFamily: "Nunito_600SemiBold",
     fontSize: 14,
     fontWeight: "600" as const,
     color: "rgba(255,255,255,0.7)",
@@ -579,12 +587,14 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   breakdownText: {
+    fontFamily: "Nunito_700Bold",
     fontSize: 22,
     fontWeight: "700" as const,
     color: "#fff",
     marginBottom: 4,
   },
   breakdownSubText: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 16,
     color: "rgba(255,255,255,0.7)",
   },
@@ -596,6 +606,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   quoteText: {
+    fontFamily: "Nunito_400Regular",
     flex: 1,
     fontSize: 16,
     color: "rgba(255,255,255,0.9)",
@@ -603,17 +614,20 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   milestoneLabel: {
+    fontFamily: "Nunito_700Bold",
     fontSize: 22,
     fontWeight: "700" as const,
     color: Colors.gold,
     marginBottom: 4,
   },
   milestoneDesc: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 14,
     color: "rgba(255,255,255,0.7)",
     marginBottom: 8,
   },
   milestoneDays: {
+    fontFamily: "Nunito_600SemiBold",
     fontSize: 16,
     color: "#fff",
     fontWeight: "600" as const,
@@ -637,6 +651,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   startDateText: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 14,
     color: "rgba(255,255,255,0.5)",
     fontStyle: "italic" as const,

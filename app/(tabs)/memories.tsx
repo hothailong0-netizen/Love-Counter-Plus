@@ -351,6 +351,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   headerTitle: {
+    fontFamily: "Nunito_700Bold",
     fontSize: 26,
     fontWeight: "bold" as const,
     color: "#FFF",
@@ -396,6 +397,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   cardDate: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 13,
     color: Colors.textSecondary,
   },
@@ -407,12 +409,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cardTitle: {
+    fontFamily: "Nunito_700Bold",
     fontSize: 18,
     fontWeight: "bold" as const,
     color: Colors.text,
     marginBottom: 6,
   },
   cardText: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 14,
     color: Colors.textSecondary,
     lineHeight: 20,
@@ -424,12 +428,14 @@ const styles = StyleSheet.create({
     paddingTop: 80,
   },
   emptyTitle: {
+    fontFamily: "Nunito_600SemiBold",
     fontSize: 20,
     fontWeight: "600" as const,
     color: Colors.text,
     marginTop: 16,
   },
   emptySubtitle: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 14,
     color: Colors.textSecondary,
     marginTop: 8,
@@ -441,6 +447,7 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   noCoupleText: {
+    fontFamily: "Nunito_400Regular",
     fontSize: 18,
     color: Colors.textSecondary,
     marginTop: 16,
@@ -487,6 +494,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   modalTitle: {
+    fontFamily: "Nunito_700Bold",
     fontSize: 20,
     fontWeight: "bold" as const,
     color: Colors.text,
@@ -503,12 +511,14 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   inputLabel: {
+    fontFamily: "Nunito_600SemiBold",
     fontSize: 15,
     fontWeight: "600" as const,
     color: Colors.text,
     marginBottom: 8,
   },
   input: {
+    fontFamily: "Nunito_400Regular",
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 12,
@@ -539,6 +549,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   moodChipText: {
+    fontFamily: "Nunito_600SemiBold",
     fontSize: 13,
     fontWeight: "600" as const,
   },
@@ -555,6 +566,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   photoButtonText: {
+    fontFamily: "Nunito_600SemiBold",
     fontSize: 15,
     color: Colors.primary,
     fontWeight: "500" as const,
@@ -583,6 +595,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   saveButtonText: {
+    fontFamily: "Nunito_700Bold",
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold" as const,

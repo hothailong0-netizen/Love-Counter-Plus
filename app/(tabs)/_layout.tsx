@@ -13,19 +13,19 @@ function NativeTabLayout() {
     <NativeTabs>
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: "heart", selected: "heart.fill" }} />
-        <Label>Trang ch\u1EE7</Label>
+        <Label style={{ fontFamily: 'Nunito_600SemiBold' }}>Trang chủ</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="memories">
         <Icon sf={{ default: "book", selected: "book.fill" }} />
-        <Label>Nh\u1EADt k\u00FD</Label>
+        <Label style={{ fontFamily: 'Nunito_600SemiBold' }}>Nhật ký</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="milestones">
         <Icon sf={{ default: "star", selected: "star.fill" }} />
-        <Label>C\u1ED9t m\u1ED1c</Label>
+        <Label style={{ fontFamily: 'Nunito_600SemiBold' }}>Cột mốc</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings">
         <Icon sf={{ default: "gearshape", selected: "gearshape.fill" }} />
-        <Label>C\u00E0i \u0111\u1EB7t</Label>
+        <Label style={{ fontFamily: 'Nunito_600SemiBold' }}>Cài đặt</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -38,6 +38,7 @@ function ClassicTabLayout() {
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: '#999',
         headerShown: false,
+        tabBarLabelStyle: { fontFamily: 'Nunito_600SemiBold' },
         tabBarStyle: {
           position: "absolute",
           backgroundColor: Platform.select({
