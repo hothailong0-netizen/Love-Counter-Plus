@@ -9,6 +9,7 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -355,6 +356,21 @@ export default function SettingsScreen() {
             <Ionicons name="code-slash-outline" size={14} color={Colors.textSecondary} />
             <Text style={styles.aboutCreator}>App Được Làm Ra Bởi <Text style={styles.aboutCreatorName}>Hồ Thái Long</Text></Text>
           </View>
+          <Pressable
+            style={styles.buildApkButton}
+            onPress={() => {
+              const domain = process.env.EXPO_PUBLIC_DOMAIN || 'localhost:5000';
+              const url = `https://${domain}/github-push`;
+              if (Platform.OS === 'web') {
+                window.open(url, '_blank');
+              } else {
+                Linking.openURL(url);
+              }
+            }}
+          >
+            <Ionicons name="logo-android" size={18} color="#FFF" />
+            <Text style={styles.buildApkButtonText}>Build APK (Android)</Text>
+          </Pressable>
         </View>
       </ScrollView>
 
@@ -832,6 +848,23 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_700Bold",
     fontSize: 13,
     color: Colors.primary,
+  },
+  buildApkButton: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 8,
+    backgroundColor: "#3DDC84",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 12,
+  },
+  buildApkButtonText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 14,
+    fontWeight: "700" as const,
+    color: "#FFF",
   },
   modalContainer: {
     flex: 1,
