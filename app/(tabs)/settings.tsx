@@ -351,6 +351,10 @@ export default function SettingsScreen() {
           <Text style={styles.aboutAppName}>Đếm Ngày Yêu</Text>
           <Text style={styles.aboutVersion}>v1.0</Text>
           <Text style={styles.aboutTagline}>Được tạo với tình yêu</Text>
+          <View style={styles.aboutCreatorRow}>
+            <Ionicons name="code-slash-outline" size={14} color={Colors.textSecondary} />
+            <Text style={styles.aboutCreator}>App Được Làm Ra Bởi <Text style={styles.aboutCreatorName}>Hồ Thái Long</Text></Text>
+          </View>
         </View>
       </ScrollView>
 
@@ -809,6 +813,25 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontStyle: "italic" as const,
     marginTop: 2,
+  },
+  aboutCreatorRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  aboutCreator: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  aboutCreatorName: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 13,
+    color: Colors.primary,
   },
   modalContainer: {
     flex: 1,
