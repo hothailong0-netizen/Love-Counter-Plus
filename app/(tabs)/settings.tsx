@@ -359,7 +359,7 @@ export default function SettingsScreen() {
           <Pressable
             style={styles.buildApkButton}
             onPress={() => {
-              const domain = process.env.EXPO_PUBLIC_DOMAIN || 'localhost:5000';
+              const domain = process.env.EXPO_PUBLIC_DOMAIN || process.env.EXPO_PUBLIC_API_URL?.replace('https://', '').replace('http://', '').replace(/\/$/, '') || 'dem-ngay-yeu.replit.app';
               const url = `https://${domain}/github-push`;
               if (Platform.OS === 'web') {
                 window.open(url, '_blank');

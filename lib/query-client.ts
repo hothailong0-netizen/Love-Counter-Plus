@@ -9,7 +9,11 @@ export function getApiUrl(): string {
   let host = process.env.EXPO_PUBLIC_DOMAIN;
 
   if (!host) {
-    throw new Error("EXPO_PUBLIC_DOMAIN is not set");
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+    if (apiUrl) {
+      return apiUrl.endsWith('/') ? apiUrl : apiUrl + '/';
+    }
+    return 'https://dem-ngay-yeu.replit.app/';
   }
 
   let url = new URL(`https://${host}`);
