@@ -13,12 +13,13 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, differenceInDays } from "date-fns";
 import { vi } from "date-fns/locale/vi";
 
 import { useLove } from "@/lib/love-context";
 import Colors from "@/constants/colors";
 import type { ImportantDate } from "@shared/schema";
+import milestones from "@/constants/milestones";
 
 const DATE_TYPES = [
   { label: "Sinh nhật", value: "birthday", color: Colors.primary },
@@ -26,6 +27,13 @@ const DATE_TYPES = [
   { label: "Đặc biệt", value: "special", color: Colors.success },
   { label: "Khác", value: "other", color: Colors.textSecondary },
 ];
+
+const DATE_TYPE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  birthday: "gift-outline",
+  anniversary: "heart-circle-outline",
+  special: "star-outline",
+  other: "ellipsis-horizontal-circle-outline",
+};
 
 function getTypeBadge(type: string) {
   return DATE_TYPES.find((t) => t.value === type) ?? DATE_TYPES[3];
@@ -37,6 +45,24 @@ function formatDateVN(dateStr: string): string {
     return format(date, "d 'tháng' M, yyyy", { locale: vi });
   } catch {
     return dateStr;
+  }
+}
+
+function getDateCountdown(dateStr: string): { text: string; isPast: boolean } {
+  try {
+    const date = parseISO(dateStr);
+    const now = new Date();
+    const thisYear = new Date(now.getFullYear(), date.getMonth(), date.getDate());
+    let target = thisYear;
+    if (thisYear < now) {
+      target = new Date(now.getFullYear() + 1, date.getMonth(), date.getDate());
+    }
+    const diff = differenceInDays(target, now);
+    if (diff === 0) return { text: "Hôm nay", isPast: false };
+    if (diff > 0) return { text: `Còn ${diff} ngày`, isPast: false };
+    return { text: "Đã qua", isPast: true };
+  } catch {
+    return { text: "Đã qua", isPast: true };
   }
 }
 
@@ -151,7 +177,10 @@ export default function SettingsScreen() {
     return (
       <View style={[styles.container, { paddingTop: topInset }]} testID="settings-screen">
         <View style={styles.noCoupleContainer}>
-          <Ionicons name="heart-dislike-outline" size={64} color={Colors.textSecondary} />
+          <View style={styles.noCoupleIconCircle}>
+            <Ionicons name="heart-dislike-outline" size={48} color={Colors.primary} />
+          </View>
+          <Text style={styles.noCoupleTitle}>Chưa có thông tin</Text>
           <Text style={styles.noCoupleText}>
             Hãy thiết lập thông tin cặp đôi ở màn hình chính trước
           </Text>
@@ -161,6 +190,15 @@ export default function SettingsScreen() {
   }
 
   const photosCount = memories.filter((m) => m.photoUri).length;
+  const milestonesReached = milestones.filter((m) => daysInLove >= m.days).length;
+
+  const statsData = [
+    { icon: "heart" as const, value: daysInLove, label: "Ngày yêu", color: Colors.heart, bg: Colors.heart + "18" },
+    { icon: "book" as const, value: memories.length, label: "Kỷ niệm", color: Colors.primary, bg: Colors.primary + "18" },
+    { icon: "images" as const, value: photosCount, label: "Ảnh", color: Colors.success, bg: Colors.success + "18" },
+    { icon: "calendar" as const, value: importantDates.length, label: "Ngày quan trọng", color: Colors.gold, bg: Colors.gold + "30" },
+    { icon: "trophy" as const, value: milestonesReached, label: "Cột mốc đạt được", color: "#9C27B0", bg: "#9C27B018" },
+  ];
 
   return (
     <View style={styles.container} testID="settings-screen">
@@ -178,11 +216,33 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        <View style={styles.loveSummaryCard}>
+          <View style={styles.loveSummaryNames}>
+            <Text style={styles.loveSummaryName}>{couple.partner1Name}</Text>
+            <View style={styles.loveSummaryHeartCircle}>
+              <Ionicons name="heart" size={18} color="#FFF" />
+            </View>
+            <Text style={styles.loveSummaryName}>{couple.partner2Name}</Text>
+          </View>
+          <Text style={styles.loveSummaryDate}>
+            {formatDateVN(couple.startDate)}
+          </Text>
+          <Text style={styles.loveSummaryDays}>
+            {daysInLove} ngày yêu nhau
+          </Text>
+        </View>
+
+        <View style={styles.sectionDivider} />
+
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="people-outline" size={20} color={Colors.text} />
-            <Text style={styles.sectionTitle}>Thông tin cặp đôi</Text>
-            <Pressable onPress={openEditModal} style={styles.editButton}>
+            <View style={styles.sectionHeaderLeft}>
+              <View style={[styles.sectionIconCircle, { backgroundColor: Colors.primary + "18" }]}>
+                <Ionicons name="people" size={16} color={Colors.primary} />
+              </View>
+              <Text style={styles.sectionTitle}>Thông tin cặp đôi</Text>
+            </View>
+            <Pressable onPress={openEditModal} style={styles.editButton} hitSlop={8}>
               <Ionicons name="create-outline" size={20} color={Colors.primary} />
             </Pressable>
           </View>
@@ -207,33 +267,75 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        <View style={styles.sectionDivider} />
+
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="calendar-outline" size={20} color={Colors.text} />
-            <Text style={styles.sectionTitle}>Ngày Quan Trọng</Text>
-            <Pressable onPress={openAddDateModal} style={styles.editButton}>
+            <View style={styles.sectionHeaderLeft}>
+              <View style={[styles.sectionIconCircle, { backgroundColor: Colors.gold + "30" }]}>
+                <Ionicons name="stats-chart" size={16} color={Colors.gold} />
+              </View>
+              <Text style={styles.sectionTitle}>Thống kê tình yêu</Text>
+            </View>
+          </View>
+          <View style={styles.statsGrid}>
+            {statsData.map((stat, index) => (
+              <View key={index} style={styles.statCard}>
+                <View style={[styles.statIconCircle, { backgroundColor: stat.bg }]}>
+                  <Ionicons name={stat.icon} size={22} color={stat.color} />
+                </View>
+                <Text style={[styles.statNumber, { color: stat.color }]}>{stat.value}</Text>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.sectionDivider} />
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionHeaderLeft}>
+              <View style={[styles.sectionIconCircle, { backgroundColor: Colors.heart + "18" }]}>
+                <Ionicons name="calendar" size={16} color={Colors.heart} />
+              </View>
+              <Text style={styles.sectionTitle}>Ngày Quan Trọng</Text>
+            </View>
+            <Pressable onPress={openAddDateModal} style={styles.editButton} hitSlop={8}>
               <Ionicons name="add-circle-outline" size={22} color={Colors.primary} />
             </Pressable>
           </View>
 
           {importantDates.length === 0 ? (
             <View style={styles.emptyDates}>
-              <Ionicons name="calendar-outline" size={40} color={Colors.textSecondary} />
+              <View style={styles.emptyDatesIconCircle}>
+                <Ionicons name="calendar-outline" size={32} color={Colors.textSecondary} />
+              </View>
               <Text style={styles.emptyDatesText}>Chưa có ngày quan trọng nào</Text>
             </View>
           ) : (
             importantDates.map((item) => {
               const badge = getTypeBadge(item.type);
+              const iconName = DATE_TYPE_ICONS[item.type] || "ellipsis-horizontal-circle-outline";
+              const countdown = getDateCountdown(item.date);
               return (
                 <View key={item.id} style={styles.dateCard}>
-                  <View style={styles.dateCardLeft}>
+                  <View style={[styles.dateCardIconCircle, { backgroundColor: badge.color + "18" }]}>
+                    <Ionicons name={iconName} size={22} color={badge.color} />
+                  </View>
+                  <View style={styles.dateCardCenter}>
                     <Text style={styles.dateCardTitle}>{item.title}</Text>
                     <Text style={styles.dateCardDate}>{formatDateVN(item.date)}</Text>
-                    <View style={[styles.typeBadge, { backgroundColor: badge.color + "20", borderColor: badge.color }]}>
-                      <Text style={[styles.typeBadgeText, { color: badge.color }]}>{badge.label}</Text>
+                    <View style={styles.dateCardBottom}>
+                      <View style={[styles.typeBadge, { backgroundColor: badge.color + "15", borderColor: badge.color }]}>
+                        <Text style={[styles.typeBadgeText, { color: badge.color }]}>{badge.label}</Text>
+                      </View>
+                      <Text style={[styles.countdownText, { color: countdown.isPast ? Colors.textSecondary : Colors.success }]}>
+                        {countdown.text}
+                      </Text>
                     </View>
                   </View>
-                  <Pressable onPress={() => handleDeleteDate(item)} hitSlop={8}>
+                  <Pressable onPress={() => handleDeleteDate(item)} hitSlop={8} style={styles.deleteButton}>
                     <Ionicons name="trash-outline" size={20} color={Colors.heart} />
                   </Pressable>
                 </View>
@@ -242,33 +344,13 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="stats-chart-outline" size={20} color={Colors.text} />
-            <Text style={styles.sectionTitle}>Thống kê tình yêu</Text>
-          </View>
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Ionicons name="heart" size={24} color={Colors.heart} />
-              <Text style={styles.statNumber}>{daysInLove}</Text>
-              <Text style={styles.statLabel}>Ngày yêu</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Ionicons name="book" size={24} color={Colors.primary} />
-              <Text style={styles.statNumber}>{memories.length}</Text>
-              <Text style={styles.statLabel}>Kỷ niệm</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Ionicons name="images" size={24} color={Colors.success} />
-              <Text style={styles.statNumber}>{photosCount}</Text>
-              <Text style={styles.statLabel}>Ảnh</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Ionicons name="calendar" size={24} color={Colors.gold} />
-              <Text style={styles.statNumber}>{importantDates.length}</Text>
-              <Text style={styles.statLabel}>Ngày quan trọng</Text>
-            </View>
-          </View>
+        <View style={styles.sectionDivider} />
+
+        <View style={styles.aboutSection}>
+          <Ionicons name="heart" size={24} color={Colors.primary} />
+          <Text style={styles.aboutAppName}>Đếm Ngày Yêu</Text>
+          <Text style={styles.aboutVersion}>v1.0</Text>
+          <Text style={styles.aboutTagline}>Được tạo với tình yêu</Text>
         </View>
       </ScrollView>
 
@@ -402,6 +484,38 @@ export default function SettingsScreen() {
   );
 }
 
+const cardShadow = Platform.select({
+  ios: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+  },
+  android: { elevation: 4 },
+  web: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+  },
+});
+
+const lightCardShadow = Platform.select({
+  ios: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+  },
+  android: { elevation: 2 },
+  web: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+  },
+});
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -416,39 +530,116 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: "bold" as const,
     color: "#FFF",
-    textAlign: "center",
+    textAlign: "center" as const,
   },
   scrollContent: {
     padding: 16,
+    gap: 0,
   },
   noCoupleContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
     padding: 32,
+    gap: 12,
+  },
+  noCoupleIconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: Colors.primary + "12",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginBottom: 8,
+  },
+  noCoupleTitle: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 20,
+    fontWeight: "700" as const,
+    color: Colors.text,
   },
   noCoupleText: {
     fontFamily: "Nunito_400Regular",
-    fontSize: 18,
+    fontSize: 16,
     color: Colors.textSecondary,
-    marginTop: 16,
-    textAlign: "center",
+    textAlign: "center" as const,
+    lineHeight: 24,
+  },
+  loveSummaryCard: {
+    backgroundColor: Colors.primary + "0D",
+    borderRadius: 16,
+    padding: 20,
+    alignItems: "center" as const,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: Colors.primary + "20",
+    ...cardShadow,
+  },
+  loveSummaryNames: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 12,
+  },
+  loveSummaryName: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 18,
+    fontWeight: "700" as const,
+    color: Colors.text,
+  },
+  loveSummaryHeartCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.heart,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  loveSummaryDate: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  loveSummaryDays: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 28,
+    fontWeight: "800" as const,
+    color: Colors.primary,
+    marginTop: 4,
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: 16,
+    marginHorizontal: 4,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 0,
   },
   sectionHeader: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    gap: 8,
-    marginBottom: 12,
+    justifyContent: "space-between" as const,
+    marginBottom: 14,
+  },
+  sectionHeaderLeft: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+    flex: 1,
+  },
+  sectionIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
   },
   sectionTitle: {
     fontFamily: "Nunito_700Bold",
     fontSize: 18,
     fontWeight: "700" as const,
     color: Colors.text,
-    flex: 1,
   },
   editButton: {
     padding: 4,
@@ -457,27 +648,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.card,
     borderRadius: 16,
     padding: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-      },
-      android: { elevation: 3 },
-      web: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-      },
-    }),
+    ...cardShadow,
   },
   infoRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: 10,
-    paddingVertical: 8,
+    paddingVertical: 10,
   },
   infoLabel: {
     fontFamily: "Nunito_400Regular",
@@ -498,32 +675,61 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.border,
     marginVertical: 2,
   },
+  statsGrid: {
+    flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    minWidth: "28%" as any,
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    padding: 14,
+    alignItems: "center" as const,
+    gap: 6,
+    ...lightCardShadow,
+  },
+  statIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    marginBottom: 2,
+  },
+  statNumber: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 24,
+    fontWeight: "800" as const,
+    color: Colors.text,
+  },
+  statLabel: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 12,
+    color: Colors.textSecondary,
+    textAlign: "center" as const,
+  },
   dateCard: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     backgroundColor: Colors.card,
-    borderRadius: 14,
+    borderRadius: 16,
     padding: 14,
-    marginBottom: 10,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-      },
-      android: { elevation: 2 },
-      web: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-      },
-    }),
+    marginBottom: 12,
+    gap: 12,
+    ...lightCardShadow,
   },
-  dateCardLeft: {
+  dateCardIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  dateCardCenter: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
   dateCardTitle: {
     fontFamily: "Nunito_600SemiBold",
@@ -536,69 +742,73 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
   },
+  dateCardBottom: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    marginTop: 4,
+  },
   typeBadge: {
     alignSelf: "flex-start" as const,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 10,
     borderWidth: 1,
-    marginTop: 2,
   },
   typeBadgeText: {
+    fontFamily: "Nunito_600SemiBold",
+    fontSize: 11,
+    fontWeight: "600" as const,
+  },
+  countdownText: {
     fontFamily: "Nunito_600SemiBold",
     fontSize: 12,
     fontWeight: "600" as const,
   },
+  deleteButton: {
+    padding: 6,
+  },
   emptyDates: {
     alignItems: "center" as const,
-    paddingVertical: 28,
-    gap: 8,
+    paddingVertical: 32,
+    gap: 10,
+  },
+  emptyDatesIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.border + "80",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
   },
   emptyDatesText: {
     fontFamily: "Nunito_400Regular",
     fontSize: 15,
     color: Colors.textSecondary,
   },
-  statsGrid: {
-    flexDirection: "row" as const,
-    flexWrap: "wrap" as const,
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: "45%" as any,
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    padding: 16,
+  aboutSection: {
     alignItems: "center" as const,
+    paddingVertical: 24,
     gap: 6,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-      },
-      android: { elevation: 2 },
-      web: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-      },
-    }),
   },
-  statNumber: {
-    fontFamily: "Nunito_800ExtraBold",
-    fontSize: 24,
-    fontWeight: "800" as const,
+  aboutAppName: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 18,
+    fontWeight: "700" as const,
     color: Colors.text,
+    marginTop: 4,
   },
-  statLabel: {
+  aboutVersion: {
     fontFamily: "Nunito_400Regular",
     fontSize: 13,
     color: Colors.textSecondary,
-    textAlign: "center" as const,
+  },
+  aboutTagline: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 14,
+    color: Colors.textSecondary,
+    fontStyle: "italic" as const,
+    marginTop: 2,
   },
   modalContainer: {
     flex: 1,
