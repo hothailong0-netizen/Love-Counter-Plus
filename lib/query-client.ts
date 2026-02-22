@@ -10,9 +10,7 @@ export async function initializeApiUrl(): Promise<void> {
 }
 
 export function isApiConfigured(): boolean {
-  if (process.env.EXPO_PUBLIC_DOMAIN) return true;
-  if (process.env.EXPO_PUBLIC_API_URL) return true;
-  return cachedServerUrl.trim().length > 0;
+  return true;
 }
 
 /**
@@ -31,7 +29,7 @@ export function getApiUrl(): string {
       const url = cachedServerUrl.trim();
       return url.endsWith('/') ? url : url + '/';
     }
-    return '';
+    return 'https://love-counter-plus.replit.app/';
   }
 
   let url = new URL(`https://${host}`);
