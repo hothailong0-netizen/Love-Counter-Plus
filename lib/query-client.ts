@@ -1,5 +1,19 @@
 import { fetch } from "expo/fetch";
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { getServerUrl } from "@/lib/server-config";
+
+let cachedServerUrl: string = '';
+
+export async function initializeApiUrl(): Promise<void> {
+  const url = await getServerUrl();
+  cachedServerUrl = url;
+}
+
+export function isApiConfigured(): boolean {
+  if (process.env.EXPO_PUBLIC_DOMAIN) return true;
+  if (process.env.EXPO_PUBLIC_API_URL) return true;
+  return cachedServerUrl.trim().length > 0;
+}
 
 /**
  * Gets the base URL for the Express API server (e.g., "http://localhost:3000")
@@ -13,7 +27,11 @@ export function getApiUrl(): string {
     if (apiUrl) {
       return apiUrl.endsWith('/') ? apiUrl : apiUrl + '/';
     }
-    return 'https://dem-ngay-yeu.replit.app/';
+    if (cachedServerUrl) {
+      const url = cachedServerUrl.trim();
+      return url.endsWith('/') ? url : url + '/';
+    }
+    return '';
   }
 
   let url = new URL(`https://${host}`);

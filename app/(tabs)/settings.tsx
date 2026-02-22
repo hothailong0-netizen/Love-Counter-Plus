@@ -18,6 +18,8 @@ import { format, parseISO, differenceInDays } from "date-fns";
 import { vi } from "date-fns/locale/vi";
 
 import { useLove } from "@/lib/love-context";
+import { getApiUrl } from "@/lib/query-client";
+import { setServerUrl } from "@/lib/server-config";
 import Colors from "@/constants/colors";
 import type { ImportantDate } from "@shared/schema";
 import milestones from "@/constants/milestones";
@@ -91,6 +93,33 @@ export default function SettingsScreen() {
   const [newDateTitle, setNewDateTitle] = useState("");
   const [newDateText, setNewDateText] = useState("");
   const [newDateType, setNewDateType] = useState("birthday");
+
+  const [serverModalVisible, setServerModalVisible] = useState(false);
+  const [serverUrlInput, setServerUrlInput] = useState("");
+
+  const currentServerUrl = getApiUrl();
+
+  const openServerModal = () => {
+    setServerUrlInput(currentServerUrl.replace(/\/$/, ''));
+    setServerModalVisible(true);
+  };
+
+  const handleSaveServerUrl = async () => {
+    if (!serverUrlInput.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập URL server");
+      return;
+    }
+    try {
+      await setServerUrl(serverUrlInput.trim());
+      setServerModalVisible(false);
+      Alert.alert(
+        "Thành công",
+        "Đã lưu URL server. Vui lòng khởi động lại ứng dụng để áp dụng thay đổi."
+      );
+    } catch {
+      Alert.alert("Lỗi", "Không thể lưu URL server. Vui lòng thử lại.");
+    }
+  };
 
   const openEditModal = () => {
     if (!couple) return;
@@ -347,6 +376,32 @@ export default function SettingsScreen() {
 
         <View style={styles.sectionDivider} />
 
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionHeaderLeft}>
+              <View style={[styles.sectionIconCircle, { backgroundColor: Colors.success + "18" }]}>
+                <Ionicons name="server-outline" size={16} color={Colors.success} />
+              </View>
+              <Text style={styles.sectionTitle}>Cấu hình Server</Text>
+            </View>
+          </View>
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Ionicons name="link-outline" size={18} color={Colors.textSecondary} />
+              <Text style={styles.infoLabel}>URL</Text>
+              <Text style={styles.infoValue} numberOfLines={1}>
+                {currentServerUrl || "Chưa cấu hình"}
+              </Text>
+            </View>
+          </View>
+          <Pressable style={styles.serverConfigButton} onPress={openServerModal}>
+            <Ionicons name="settings-outline" size={18} color="#FFF" />
+            <Text style={styles.serverConfigButtonText}>Cấu hình Server</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.sectionDivider} />
+
         <View style={styles.aboutSection}>
           <Ionicons name="heart" size={24} color={Colors.primary} />
           <Text style={styles.aboutAppName}>Đếm Ngày Yêu</Text>
@@ -496,6 +551,49 @@ export default function SettingsScreen() {
             <Pressable style={styles.saveButton} onPress={handleAddDate}>
               <Ionicons name="add" size={20} color="#FFF" />
               <Text style={styles.saveButtonText}>Thêm ngày</Text>
+            </Pressable>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={serverModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setServerModalVisible(false)}
+      >
+        <View style={[styles.modalContainer, { paddingTop: Platform.OS === "web" ? 67 : insets.top + 8 }]}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Cấu hình Server</Text>
+            <Pressable onPress={() => setServerModalVisible(false)}>
+              <Ionicons name="close" size={28} color={Colors.text} />
+            </Pressable>
+          </View>
+
+          <ScrollView
+            style={styles.modalBody}
+            contentContainerStyle={{ paddingBottom: bottomInset + 24 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={styles.serverHelpText}>
+              Nhập URL server để ứng dụng kết nối. URL phải bao gồm giao thức (https://).
+            </Text>
+
+            <Text style={styles.inputLabel}>URL Server</Text>
+            <TextInput
+              style={styles.input}
+              value={serverUrlInput}
+              onChangeText={setServerUrlInput}
+              placeholder="https://example.replit.app"
+              placeholderTextColor={Colors.textSecondary}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+            />
+
+            <Pressable style={styles.saveButton} onPress={handleSaveServerUrl}>
+              <Ionicons name="checkmark" size={20} color="#FFF" />
+              <Text style={styles.saveButtonText}>Lưu</Text>
             </Pressable>
           </ScrollView>
         </View>
@@ -941,5 +1039,34 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold" as const,
+  },
+  serverConfigButton: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 8,
+    backgroundColor: Colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 12,
+  },
+  serverConfigButtonText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 14,
+    fontWeight: "700" as const,
+    color: "#FFF",
+  },
+  serverHelpText: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 22,
+    marginBottom: 20,
+    backgroundColor: Colors.primary + "0D",
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.primary + "20",
   },
 });
