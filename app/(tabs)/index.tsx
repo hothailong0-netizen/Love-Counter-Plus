@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -30,6 +30,63 @@ import {
   format,
 } from "date-fns";
 import { vi } from "date-fns/locale/vi";
+import type { ImportantDate } from "@shared/schema";
+
+function GlowRing() {
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(0.3);
+
+  useEffect(() => {
+    scale.value = withDelay(
+      200,
+      withRepeat(
+        withSequence(
+          withTiming(1.2, { duration: 600 }),
+          withTiming(0.98, { duration: 400 }),
+          withTiming(1.12, { duration: 300 }),
+          withTiming(1, { duration: 300 })
+        ),
+        -1,
+        false
+      )
+    );
+    opacity.value = withDelay(
+      200,
+      withRepeat(
+        withSequence(
+          withTiming(0.5, { duration: 600 }),
+          withTiming(0.2, { duration: 400 }),
+          withTiming(0.4, { duration: 300 }),
+          withTiming(0.3, { duration: 300 })
+        ),
+        -1,
+        false
+      )
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        {
+          position: "absolute" as const,
+          width: 140,
+          height: 140,
+          borderRadius: 70,
+          borderWidth: 3,
+          borderColor: Colors.heart,
+          backgroundColor: "rgba(255, 23, 68, 0.08)",
+        },
+        animatedStyle,
+      ]}
+    />
+  );
+}
 
 function PulsingHeart({ size = 80 }: { size?: number }) {
   const scale = useSharedValue(1);
@@ -58,7 +115,17 @@ function PulsingHeart({ size = 80 }: { size?: number }) {
   );
 }
 
-function FloatingHeart({ delay: d, left }: { delay: number; left: number }) {
+function FloatingHeart({
+  delay: d,
+  left,
+  heartSize = 16,
+  floatHeight = -60,
+}: {
+  delay: number;
+  left: number;
+  heartSize?: number;
+  floatHeight?: number;
+}) {
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(0);
 
@@ -78,7 +145,7 @@ function FloatingHeart({ delay: d, left }: { delay: number; left: number }) {
       d,
       withRepeat(
         withSequence(
-          withTiming(-60, { duration: 3000 }),
+          withTiming(floatHeight, { duration: 3000 }),
           withTiming(0, { duration: 0 })
         ),
         -1,
@@ -93,8 +160,14 @@ function FloatingHeart({ delay: d, left }: { delay: number; left: number }) {
   }));
 
   return (
-    <Animated.View style={[{ position: "absolute" as const, left, bottom: 0 }, style]}>
-      <Ionicons name="heart" size={16} color="rgba(255,255,255,0.4)" />
+    <Animated.View
+      style={[{ position: "absolute" as const, left, bottom: 0 }, style]}
+    >
+      <Ionicons
+        name="heart"
+        size={heartSize}
+        color="rgba(255,255,255,0.4)"
+      />
     </Animated.View>
   );
 }
@@ -239,6 +312,8 @@ export default function HomeScreen() {
     minutesInLove,
     nextMilestone,
     todayQuote,
+    memories,
+    importantDates,
   } = useLove();
   const insets = useSafeAreaInsets();
   const [seconds, setSeconds] = useState(0);
@@ -257,6 +332,32 @@ export default function HomeScreen() {
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [couple?.startDate]);
+
+  const nextImportantDate = useMemo(() => {
+    if (!importantDates || importantDates.length === 0) return null;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    let closest: { date: ImportantDate; daysUntil: number } | null = null;
+
+    for (const d of importantDates) {
+      const dateObj = new Date(d.date);
+      const thisYear = new Date(today.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+      let target = thisYear;
+      if (target < today) {
+        target = new Date(today.getFullYear() + 1, dateObj.getMonth(), dateObj.getDate());
+      }
+      const diff = differenceInDays(target, today);
+      if (diff >= 0 && (!closest || diff < closest.daysUntil)) {
+        closest = { date: d, daysUntil: diff };
+      }
+    }
+    return closest;
+  }, [importantDates]);
+
+  const photoCount = useMemo(() => {
+    return memories.filter((m) => m.photoUri).length;
+  }, [memories]);
 
   if (isLoading) {
     return (
@@ -329,17 +430,43 @@ export default function HomeScreen() {
 
           <View style={styles.heartSection}>
             <View style={styles.floatingHeartsContainer}>
-              <FloatingHeart delay={0} left={20} />
-              <FloatingHeart delay={800} left={60} />
-              <FloatingHeart delay={1600} left={100} />
-              <FloatingHeart delay={400} left={140} />
-              <FloatingHeart delay={1200} left={180} />
+              <FloatingHeart delay={0} left={10} heartSize={14} floatHeight={-90} />
+              <FloatingHeart delay={600} left={40} heartSize={12} floatHeight={-100} />
+              <FloatingHeart delay={1200} left={70} heartSize={18} floatHeight={-80} />
+              <FloatingHeart delay={300} left={100} heartSize={13} floatHeight={-110} />
+              <FloatingHeart delay={900} left={130} heartSize={20} floatHeight={-85} />
+              <FloatingHeart delay={1500} left={160} heartSize={15} floatHeight={-120} />
+              <FloatingHeart delay={450} left={190} heartSize={12} floatHeight={-95} />
+              <FloatingHeart delay={1050} left={220} heartSize={16} floatHeight={-105} />
             </View>
+            <GlowRing />
             <PulsingHeart size={100} />
           </View>
 
           <Text style={styles.bigNumber}>{daysInLove}</Text>
           <Text style={styles.bigLabel}>ngày yêu nhau</Text>
+
+          <View style={styles.divider} />
+
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Ionicons name="book-outline" size={20} color={Colors.secondary} />
+              <Text style={styles.statNumber}>{memories.length}</Text>
+              <Text style={styles.statLabel}>Kỷ niệm</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Ionicons name="camera-outline" size={20} color={Colors.primaryLight} />
+              <Text style={styles.statNumber}>{photoCount}</Text>
+              <Text style={styles.statLabel}>Ảnh</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Ionicons name="star-outline" size={20} color={Colors.gold} />
+              <Text style={styles.statNumber}>{importantDates.length}</Text>
+              <Text style={styles.statLabel}>Ngày quan trọng</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
 
           <View style={styles.card}>
             <View style={styles.cardRow}>
@@ -357,6 +484,26 @@ export default function HomeScreen() {
               {displayHours} giờ, {displayMinutes} phút, {displaySeconds} giây bên nhau
             </Text>
           </View>
+
+          {nextImportantDate && (
+            <View style={styles.card}>
+              <View style={styles.cardRow}>
+                <Ionicons name="calendar-outline" size={18} color={Colors.gold} />
+                <Text style={styles.cardTitle}>Ngày sắp tới</Text>
+              </View>
+              <Text style={styles.importantDateTitle}>
+                {nextImportantDate.date.title}
+              </Text>
+              <Text style={styles.importantDateCountdown}>
+                {nextImportantDate.daysUntil === 0
+                  ? "Hôm nay!"
+                  : `Còn ${nextImportantDate.daysUntil} ngày nữa`}
+              </Text>
+              <Text style={styles.importantDateActual}>
+                {format(new Date(nextImportantDate.date.date), "dd/MM/yyyy")}
+              </Text>
+            </View>
+          )}
 
           <View style={styles.card}>
             <View style={styles.cardRow}>
@@ -517,14 +664,14 @@ const styles = StyleSheet.create({
   heartSection: {
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    height: 140,
-    width: 200,
+    height: 160,
+    width: 250,
     marginBottom: 8,
   },
   floatingHeartsContainer: {
     position: "absolute" as const,
-    width: 200,
-    height: 100,
+    width: 250,
+    height: 120,
     bottom: 20,
   },
   bigNumber: {
@@ -534,6 +681,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "center" as const,
     lineHeight: 80,
+    textShadowColor: "rgba(255, 23, 68, 0.6)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
     ...Platform.select({
       ios: {
         shadowColor: "#FF1744",
@@ -549,9 +699,45 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "rgba(255,255,255,0.8)",
     fontWeight: "500" as const,
-    marginBottom: 28,
+    marginBottom: 20,
     letterSpacing: 2,
     textTransform: "uppercase" as const,
+  },
+  divider: {
+    width: "80%" as any,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    marginBottom: 20,
+  },
+  statsRow: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    width: "100%" as any,
+    gap: 10,
+    marginBottom: 20,
+  },
+  statCard: {
+    flex: 1,
+    alignItems: "center" as const,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
+  statNumber: {
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 24,
+    fontWeight: "800" as const,
+    color: "#fff",
+    marginTop: 6,
+  },
+  statLabel: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 12,
+    color: "rgba(255,255,255,0.6)",
+    marginTop: 2,
   },
   card: {
     width: "100%" as any,
@@ -612,6 +798,25 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.9)",
     fontStyle: "italic" as const,
     lineHeight: 24,
+  },
+  importantDateTitle: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 20,
+    fontWeight: "700" as const,
+    color: Colors.gold,
+    marginBottom: 4,
+  },
+  importantDateCountdown: {
+    fontFamily: "Nunito_600SemiBold",
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: "#fff",
+    marginBottom: 4,
+  },
+  importantDateActual: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 14,
+    color: "rgba(255,255,255,0.5)",
   },
   milestoneLabel: {
     fontFamily: "Nunito_700Bold",
