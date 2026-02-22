@@ -1,6 +1,5 @@
 import type { Express } from "express";
 import { createServer, type Server } from "node:http";
-import * as https from "node:https";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import {
@@ -97,34 +96,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  function ghApi(token: string, endpoint: string, data?: unknown, method?: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const body = data ? JSON.stringify(data) : null;
-      const req = https.request({
-        hostname: 'api.github.com',
-        path: endpoint,
-        method: method || (data ? 'POST' : 'GET'),
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/vnd.github+json',
-          'User-Agent': 'replit-push',
-          ...(body ? { 'Content-Length': Buffer.byteLength(body) } : {})
-        }
-      }, (res) => {
-        let chunks: Buffer[] = [];
-        res.on('data', (c: Buffer) => chunks.push(c));
-        res.on('end', () => {
-          const text = Buffer.concat(chunks).toString();
-          try { resolve(JSON.parse(text)); } catch { resolve({ raw: text }); }
-        });
-      });
-      req.on('error', reject);
-      if (body) req.write(body);
-      req.end();
-    });
-  }
-
   function getAllFiles(dir: string, base: string): Array<{ full: string; rel: string }> {
     let results: Array<{ full: string; rel: string }> = [];
     const skipDirs = new Set(['.git', 'node_modules', '.cache', '.expo', 'dist', '.local', '.upm', '.config', 'attached_assets', 'references']);
@@ -179,7 +150,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 1. Vào <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a><br>
 2. Note: gõ "replit"<br>
 3. Expiration: chọn 90 days<br>
-4. Tích ô <strong>repo</strong><br>
+4. Tích ô <strong>repo</strong> VÀ <strong>workflow</strong><br>
 5. Nhấn Generate token<br>
 6. Copy token (ghp_...) dán vào ô dưới
 </div>
@@ -226,98 +197,64 @@ async function pushCode(){
     }
 
     try {
-      const user = await ghApi(token, '/user');
+      const { execSync } = require('child_process');
+      const run = (cmd: string) => execSync(cmd, { cwd: process.cwd(), timeout: 30000, stdio: 'pipe' }).toString().trim();
+
+      const userRes = await fetch('https://api.github.com/user', {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'User-Agent': 'replit-push' }
+      });
+      const user = await userRes.json() as any;
       if (user.message === 'Bad credentials') {
-        return res.json({ success: false, error: "Token không hợp lệ. Kiểm tra lại token." });
+        return res.json({ success: false, error: "Token không hợp lệ" });
       }
       const username = user.login;
       const repoFullName = `${username}/${repo}`;
 
-      let repoInfo = await ghApi(token, `/repos/${repoFullName}`);
-      
+      const repoRes = await fetch(`https://api.github.com/repos/${repoFullName}`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'User-Agent': 'replit-push' }
+      });
+      const repoInfo = await repoRes.json() as any;
       if (repoInfo.message === 'Not Found') {
-        console.log('GitHub Push: Repo not found, creating...');
-        await ghApi(token, '/user/repos', { name: repo, private: false, auto_init: false });
-        await new Promise(r => setTimeout(r, 2000));
+        await fetch('https://api.github.com/user/repos', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'User-Agent': 'replit-push', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: repo, private: false, auto_init: true })
+        });
+        await new Promise(r => setTimeout(r, 4000));
       }
 
-      let defaultBranch = 'main';
-      const repoDetail = await ghApi(token, `/repos/${repoFullName}`);
-      if (repoDetail?.default_branch) {
-        defaultBranch = repoDetail.default_branch;
-      }
-      console.log(`GitHub Push: Repo ${repoFullName}, default branch: ${defaultBranch}`);
-
-      let ref = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/${defaultBranch}`);
-      let parentSha = ref?.object?.sha;
-
-      if (!parentSha) {
-        console.log('GitHub Push: Empty repo, creating initial commit via Contents API...');
-        const initContent = Buffer.from('# ' + repo + '\n\nĐếm Ngày Yêu - Love Day Counter\n').toString('base64');
-        const initResult = await ghApi(token, `/repos/${repoFullName}/contents/README.md`, {
-          message: 'Initial commit',
-          content: initContent
-        }, 'PUT');
-        console.log('GitHub Push: Init result:', JSON.stringify(initResult).slice(0, 300));
-        
-        await new Promise(r => setTimeout(r, 3000));
-        
-        const repoDetail2 = await ghApi(token, `/repos/${repoFullName}`);
-        if (repoDetail2?.default_branch) {
-          defaultBranch = repoDetail2.default_branch;
-        }
-        ref = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/${defaultBranch}`);
-        parentSha = ref?.object?.sha;
-      }
-
-      if (!parentSha) {
-        return res.json({ success: false, error: "Không khởi tạo được repo. Vui lòng xóa repo '" + repo + "' trên GitHub.com, rồi quay lại thử lại." });
-      }
-      console.log(`GitHub Push: Parent SHA: ${parentSha}, branch: ${defaultBranch}`);
-
+      const tmpDir = '/tmp/git-push-' + Date.now();
       const srcDir = process.cwd();
       const files = getAllFiles(srcDir, '');
-      console.log(`GitHub Push: Found ${files.length} files to upload`);
 
-      const treeEntries: Array<{ path: string; mode: string; type: string; sha: string }> = [];
+      execSync(`mkdir -p ${tmpDir}`, { stdio: 'pipe' });
+      execSync(`git init ${tmpDir}`, { stdio: 'pipe' });
+      execSync(`git -C ${tmpDir} config user.email "app@demdayyeu.com"`, { stdio: 'pipe' });
+      execSync(`git -C ${tmpDir} config user.name "Đếm Ngày Yêu"`, { stdio: 'pipe' });
 
-      for (let i = 0; i < files.length; i++) {
-        const { full, rel } = files[i];
-        const content = fs.readFileSync(full).toString('base64');
-        const blob = await ghApi(token, `/repos/${repoFullName}/git/blobs`, { content, encoding: 'base64' });
-        if (blob?.sha) {
-          treeEntries.push({ path: rel, mode: '100644', type: 'blob', sha: blob.sha });
-          console.log(`[${i + 1}/${files.length}] ${rel}`);
-        } else {
-          console.log(`FAIL [${i + 1}/${files.length}] ${rel}`);
-        }
+      for (const { full, rel } of files) {
+        const destPath = path.join(tmpDir, rel);
+        const destDir = path.dirname(destPath);
+        fs.mkdirSync(destDir, { recursive: true });
+        fs.copyFileSync(full, destPath);
       }
 
-      console.log(`GitHub Push: Creating tree with ${treeEntries.length} entries for ${repoFullName}...`);
-      const tree = await ghApi(token, `/repos/${repoFullName}/git/trees`, { base_tree: parentSha, tree: treeEntries });
-      if (!tree?.sha) {
-        console.log('GitHub Push: Tree error:', JSON.stringify(tree).slice(0, 500));
-        return res.json({ success: false, error: "Không tạo được tree: " + JSON.stringify(tree).slice(0, 200) });
-      }
-      console.log(`GitHub Push: Tree created: ${tree.sha}`);
+      execSync(`git -C ${tmpDir} add -A`, { stdio: 'pipe' });
+      execSync(`git -C ${tmpDir} commit -m "Đếm Ngày Yêu - Love Day Counter app"`, { stdio: 'pipe' });
+      execSync(`git -C ${tmpDir} branch -M main`, { stdio: 'pipe' });
 
-      const commitData: any = { message: 'Đếm Ngày Yêu - Love Day Counter app', tree: tree.sha, parents: [parentSha] };
+      const pushUrl = `https://${token}@github.com/${repoFullName}.git`;
+      execSync(`git -C ${tmpDir} remote add origin "${pushUrl}"`, { stdio: 'pipe' });
+      execSync(`git -C ${tmpDir} push -f origin main`, { stdio: 'pipe', timeout: 120000 });
 
-      const commit = await ghApi(token, `/repos/${repoFullName}/git/commits`, commitData);
-      if (!commit?.sha) {
-        console.log('GitHub Push: Commit error:', JSON.stringify(commit).slice(0, 500));
-        return res.json({ success: false, error: "Không tạo được commit" });
-      }
-      console.log(`GitHub Push: Commit created: ${commit.sha}`);
+      execSync(`rm -rf ${tmpDir}`, { stdio: 'pipe' });
 
-      await ghApi(token, `/repos/${repoFullName}/git/refs/heads/${defaultBranch}`, { sha: commit.sha, force: true }, 'PATCH');
-
-      console.log(`GitHub Push: SUCCESS to ${repoFullName}`);
-      return res.json({ success: true, repoFullName, filesCount: treeEntries.length });
+      return res.json({ success: true, repoFullName, filesCount: files.length });
 
     } catch (error: any) {
-      console.error('GitHub Push error:', error);
-      return res.json({ success: false, error: error.message || "Lỗi không xác định" });
+      console.error('GitHub Push error:', error.message || error);
+      const stderr = error.stderr ? error.stderr.toString() : '';
+      return res.json({ success: false, error: stderr || error.message || "Lỗi không xác định" });
     }
   });
 
