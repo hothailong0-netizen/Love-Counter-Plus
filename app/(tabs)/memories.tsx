@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Alert,
   ScrollView,
   KeyboardAvoidingView,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -31,6 +32,13 @@ const MOODS = [
   { label: "Nhớ nhung", color: "#9C27B0", icon: "moon-outline" as const },
   { label: "Xúc động", color: "#2196F3", icon: "water-outline" as const },
 ];
+
+type ViewMode = "list" | "grid";
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const GRID_GAP = 12;
+const GRID_PADDING = 16;
+const GRID_ITEM_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP) / 2;
 
 function getMoodInfo(mood: string | null) {
   return MOODS.find((m) => m.label === mood) ?? null;
@@ -55,9 +63,21 @@ export default function MemoriesScreen() {
   const [dateText, setDateText] = useState("");
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const topInset = Platform.OS === "web" ? 67 : insets.top;
   const bottomInset = Platform.OS === "web" ? 34 : insets.bottom;
+
+  const filteredMemories = useMemo(() => {
+    if (!searchQuery.trim()) return memories;
+    const q = searchQuery.toLowerCase().trim();
+    return memories.filter((m) => m.title.toLowerCase().includes(q));
+  }, [memories, searchQuery]);
+
+  const photoMemories = useMemo(() => {
+    return filteredMemories.filter((m) => !!m.photoUri);
+  }, [filteredMemories]);
 
   const resetForm = () => {
     setTitle("");
@@ -150,43 +170,124 @@ export default function MemoriesScreen() {
 
   const renderMemoryCard = ({ item }: { item: Memory }) => {
     const moodInfo = getMoodInfo(item.mood ?? null);
+    const borderColor = moodInfo ? moodInfo.color : Colors.primary;
     return (
       <Pressable
-        style={styles.card}
+        style={[styles.card, { borderLeftWidth: 4, borderLeftColor: borderColor }]}
         onLongPress={() => handleDeleteMemory(item)}
       >
-        {item.photoUri && (
-          <Image
-            source={{ uri: item.photoUri }}
-            style={styles.cardPhoto}
-            contentFit="cover"
-          />
-        )}
-        <View style={styles.cardContent}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardDate}>{formatDateVN(item.date)}</Text>
+        <View style={styles.cardBody}>
+          <View style={styles.cardMainContent}>
+            <View style={styles.cardDateRow}>
+              <Ionicons name="calendar-outline" size={14} color={Colors.textSecondary} />
+              <Text style={styles.cardDate}>{formatDateVN(item.date)}</Text>
+            </View>
+            <Text style={styles.cardTitle}>{item.title}</Text>
+            {item.content ? (
+              <Text style={styles.cardText} numberOfLines={2}>
+                {item.content}
+              </Text>
+            ) : null}
             {moodInfo && (
-              <View style={[styles.moodDot, { backgroundColor: moodInfo.color }]}>
-                <Ionicons name={moodInfo.icon} size={12} color="#FFF" />
+              <View style={[styles.moodBadge, { backgroundColor: moodInfo.color + "18", borderColor: moodInfo.color }]}>
+                <Ionicons name={moodInfo.icon} size={13} color={moodInfo.color} />
+                <Text style={[styles.moodBadgeText, { color: moodInfo.color }]}>{moodInfo.label}</Text>
               </View>
             )}
           </View>
-          <Text style={styles.cardTitle}>{item.title}</Text>
-          {item.content ? (
-            <Text style={styles.cardText} numberOfLines={3}>
-              {item.content}
-            </Text>
-          ) : null}
+          {item.photoUri && (
+            <Image
+              source={{ uri: item.photoUri }}
+              style={styles.cardThumbnail}
+              contentFit="cover"
+            />
+          )}
         </View>
       </Pressable>
     );
   };
+
+  const renderGridItem = ({ item }: { item: Memory }) => (
+    <Pressable
+      style={styles.gridItem}
+      onLongPress={() => handleDeleteMemory(item)}
+    >
+      <Image
+        source={{ uri: item.photoUri! }}
+        style={styles.gridImage}
+        contentFit="cover"
+      />
+      <LinearGradient
+        colors={["transparent", "rgba(0,0,0,0.7)"]}
+        style={styles.gridOverlay}
+      >
+        <Text style={styles.gridTitle} numberOfLines={2}>{item.title}</Text>
+      </LinearGradient>
+    </Pressable>
+  );
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <Ionicons name="book-outline" size={64} color={Colors.textSecondary} />
       <Text style={styles.emptyTitle}>Chưa có kỷ niệm nào</Text>
       <Text style={styles.emptySubtitle}>Hãy thêm kỷ niệm đầu tiên của bạn</Text>
+    </View>
+  );
+
+  const renderPhotoEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="camera-outline" size={64} color={Colors.textSecondary} />
+      <Text style={styles.emptyTitle}>Chưa có ảnh nào</Text>
+      <Text style={styles.emptySubtitle}>Thêm ảnh vào kỷ niệm để xem ở đây</Text>
+    </View>
+  );
+
+  const ListHeader = () => (
+    <View>
+      <View style={styles.tabRow}>
+        <Pressable
+          style={[styles.tab, viewMode === "list" && styles.tabActive]}
+          onPress={() => setViewMode("list")}
+        >
+          <Ionicons
+            name="list-outline"
+            size={16}
+            color={viewMode === "list" ? "#FFF" : Colors.primary}
+          />
+          <Text style={[styles.tabText, viewMode === "list" && styles.tabTextActive]}>
+            Danh sách
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.tab, viewMode === "grid" && styles.tabActive]}
+          onPress={() => setViewMode("grid")}
+        >
+          <Ionicons
+            name="images-outline"
+            size={16}
+            color={viewMode === "grid" ? "#FFF" : Colors.primary}
+          />
+          <Text style={[styles.tabText, viewMode === "grid" && styles.tabTextActive]}>
+            Bộ sưu tập ảnh
+          </Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <Ionicons name="search-outline" size={18} color={Colors.textSecondary} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Tìm kiếm kỷ niệm..."
+          placeholderTextColor={Colors.textSecondary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <Pressable onPress={() => setSearchQuery("")}>
+            <Ionicons name="close-circle" size={18} color={Colors.textSecondary} />
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 
@@ -198,21 +299,42 @@ export default function MemoriesScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: topInset + 16 }]}
       >
-        <Text style={styles.headerTitle}>Nhật Ký Tình Yêu</Text>
+        <Text style={styles.headerTitle}>
+          Nhật Ký Tình Yêu ({memories.length})
+        </Text>
       </LinearGradient>
 
-      <FlatList
-        data={memories}
-        keyExtractor={(item) => item.id}
-        renderItem={renderMemoryCard}
-        contentContainerStyle={[
-          styles.listContent,
-          { paddingBottom: bottomInset + 80 },
-        ]}
-        ListEmptyComponent={renderEmptyState}
-        scrollEnabled={!!memories && memories.length > 0}
-        showsVerticalScrollIndicator={false}
-      />
+      {viewMode === "list" ? (
+        <FlatList
+          data={filteredMemories}
+          keyExtractor={(item) => item.id}
+          renderItem={renderMemoryCard}
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingBottom: bottomInset + 80 },
+          ]}
+          ListHeaderComponent={ListHeader}
+          ListEmptyComponent={renderEmptyState}
+          scrollEnabled={!!filteredMemories && filteredMemories.length > 0}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <FlatList
+          data={photoMemories}
+          keyExtractor={(item) => item.id}
+          renderItem={renderGridItem}
+          numColumns={2}
+          columnWrapperStyle={styles.gridRow}
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingBottom: bottomInset + 80 },
+          ]}
+          ListHeaderComponent={ListHeader}
+          ListEmptyComponent={renderPhotoEmptyState}
+          scrollEnabled={photoMemories.length > 0}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
       <Pressable
         style={[styles.fab, { bottom: bottomInset + 24 }]}
@@ -351,26 +473,156 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   headerTitle: {
-    fontFamily: "Nunito_700Bold",
+    fontFamily: "Nunito_800ExtraBold",
     fontSize: 26,
-    fontWeight: "bold" as const,
+    fontWeight: "800" as const,
     color: "#FFF",
     textAlign: "center",
+  },
+  tabRow: {
+    flexDirection: "row" as const,
+    gap: 10,
+    marginBottom: 12,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    gap: 6,
+    backgroundColor: "transparent",
+  },
+  tabActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  tabText: {
+    fontFamily: "Nunito_600SemiBold",
+    fontSize: 14,
+    fontWeight: "600" as const,
+    color: Colors.primary,
+  },
+  tabTextActive: {
+    color: "#FFF",
+  },
+  searchContainer: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    height: 44,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: "Nunito_400Regular",
+    fontSize: 14,
+    color: Colors.text,
+    height: 44,
   },
   listContent: {
     padding: 16,
   },
   card: {
     backgroundColor: Colors.card,
-    borderRadius: 16,
-    marginBottom: 16,
-    overflow: "hidden",
+    borderRadius: 14,
+    marginBottom: 14,
+    overflow: "hidden" as const,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 3,
+      },
+      web: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+      },
+    }),
+  },
+  cardBody: {
+    flexDirection: "row" as const,
+    padding: 14,
+    gap: 12,
+  },
+  cardMainContent: {
+    flex: 1,
+    gap: 4,
+  },
+  cardDateRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 5,
+    marginBottom: 2,
+  },
+  cardDate: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  cardTitle: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 16,
+    fontWeight: "bold" as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  cardText: {
+    fontFamily: "Nunito_400Regular",
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
+  },
+  moodBadge: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    alignSelf: "flex-start" as const,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 4,
+    marginTop: 4,
+  },
+  moodBadgeText: {
+    fontFamily: "Nunito_600SemiBold",
+    fontSize: 11,
+    fontWeight: "600" as const,
+  },
+  cardThumbnail: {
+    width: 60,
+    height: 60,
+    borderRadius: 10,
+  },
+  gridRow: {
+    justifyContent: "space-between" as const,
+    marginBottom: GRID_GAP,
+  },
+  gridItem: {
+    width: GRID_ITEM_WIDTH,
+    height: GRID_ITEM_WIDTH,
+    borderRadius: 14,
+    overflow: "hidden" as const,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowRadius: 6,
       },
       android: {
         elevation: 4,
@@ -379,52 +631,33 @@ const styles = StyleSheet.create({
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowRadius: 6,
       },
     }),
   },
-  cardPhoto: {
+  gridImage: {
     width: "100%",
-    height: 180,
+    height: "100%",
   },
-  cardContent: {
-    padding: 16,
+  gridOverlay: {
+    position: "absolute" as const,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+    paddingTop: 30,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  cardDate: {
-    fontFamily: "Nunito_400Regular",
-    fontSize: 13,
-    color: Colors.textSecondary,
-  },
-  moodDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cardTitle: {
+  gridTitle: {
     fontFamily: "Nunito_700Bold",
-    fontSize: 18,
+    fontSize: 13,
     fontWeight: "bold" as const,
-    color: Colors.text,
-    marginBottom: 6,
-  },
-  cardText: {
-    fontFamily: "Nunito_400Regular",
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 20,
+    color: "#FFF",
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
     paddingTop: 80,
   },
   emptyTitle: {
@@ -442,8 +675,8 @@ const styles = StyleSheet.create({
   },
   noCoupleContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
     padding: 32,
   },
   noCoupleText: {
@@ -451,17 +684,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.textSecondary,
     marginTop: 16,
-    textAlign: "center",
+    textAlign: "center" as const,
   },
   fab: {
-    position: "absolute",
+    position: "absolute" as const,
     right: 20,
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: Colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
     ...Platform.select({
       ios: {
         shadowColor: Colors.primary,
@@ -485,9 +718,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
   },
   modalHeader: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: "row" as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
     paddingHorizontal: 20,
     paddingBottom: 12,
     borderBottomWidth: 1,
@@ -500,7 +733,7 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   closeButton: {
-    position: "absolute",
+    position: "absolute" as const,
     right: 16,
     top: Platform.OS === "web" ? 67 : undefined,
     bottom: 8,
@@ -531,17 +764,17 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 100,
-    textAlignVertical: "top",
+    textAlignVertical: "top" as const,
   },
   moodRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
     gap: 8,
     marginBottom: 20,
   },
   moodChip: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
@@ -554,15 +787,15 @@ const styles = StyleSheet.create({
     fontWeight: "600" as const,
   },
   photoButton: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
     gap: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: Colors.primary,
     borderRadius: 12,
-    borderStyle: "dashed",
+    borderStyle: "dashed" as const,
     marginBottom: 16,
   },
   photoButtonText: {
@@ -574,8 +807,8 @@ const styles = StyleSheet.create({
   photoPreviewContainer: {
     marginBottom: 20,
     borderRadius: 12,
-    overflow: "hidden",
-    position: "relative",
+    overflow: "hidden" as const,
+    position: "relative" as const,
   },
   photoPreview: {
     width: "100%",
@@ -583,7 +816,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   removePhoto: {
-    position: "absolute",
+    position: "absolute" as const,
     top: 8,
     right: 8,
   },
@@ -591,7 +824,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     paddingVertical: 16,
     borderRadius: 14,
-    alignItems: "center",
+    alignItems: "center" as const,
     marginTop: 8,
   },
   saveButtonText: {
