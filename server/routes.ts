@@ -236,35 +236,34 @@ async function pushCode(){
       let repoInfo = await ghApi(token, `/repos/${repoFullName}`);
       
       if (repoInfo.message === 'Not Found') {
-        console.log('GitHub Push: Repo not found, creating with auto_init...');
-        await ghApi(token, '/user/repos', { name: repo, private: false, auto_init: true });
-        await new Promise(r => setTimeout(r, 4000));
-      } else {
-        const ref = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/main`);
-        if (!ref?.object?.sha) {
-          console.log('GitHub Push: Repo exists but empty. Deleting and re-creating...');
-          await ghApi(token, `/repos/${repoFullName}`, undefined, 'DELETE');
-          await new Promise(r => setTimeout(r, 3000));
-          await ghApi(token, '/user/repos', { name: repo, private: false, auto_init: true });
-          await new Promise(r => setTimeout(r, 4000));
-        }
-      }
-
-      let parentSha: string | undefined;
-      for (let attempt = 0; attempt < 10; attempt++) {
-        const ref = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/main`);
-        if (ref?.object?.sha) {
-          parentSha = ref.object.sha;
-          console.log(`GitHub Push: Got parent SHA: ${parentSha} (attempt ${attempt + 1})`);
-          break;
-        }
-        console.log(`GitHub Push: Waiting for repo init... (attempt ${attempt + 1})`);
+        console.log('GitHub Push: Repo not found, creating...');
+        await ghApi(token, '/user/repos', { name: repo, private: false, auto_init: false });
         await new Promise(r => setTimeout(r, 2000));
       }
 
+      let ref = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/main`);
+      let parentSha = ref?.object?.sha;
+
       if (!parentSha) {
-        return res.json({ success: false, error: "Repo chưa sẵn sàng. Vui lòng xóa repo trên GitHub rồi thử lại." });
+        console.log('GitHub Push: Empty repo, creating initial commit via Contents API...');
+        const initContent = Buffer.from('# ' + repo + '\n\nĐếm Ngày Yêu - Love Day Counter\n').toString('base64');
+        const initResult = await ghApi(token, `/repos/${repoFullName}/contents/README.md`, {
+          message: 'Initial commit',
+          content: initContent
+        }, 'PUT');
+        console.log('GitHub Push: Init result:', JSON.stringify(initResult).slice(0, 300));
+        
+        if (initResult?.commit?.sha) {
+          await new Promise(r => setTimeout(r, 2000));
+          ref = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/main`);
+          parentSha = ref?.object?.sha;
+        }
       }
+
+      if (!parentSha) {
+        return res.json({ success: false, error: "Không khởi tạo được repo. Vui lòng xóa repo '" + repo + "' trên GitHub.com, rồi quay lại thử lại." });
+      }
+      console.log(`GitHub Push: Parent SHA: ${parentSha}`);
 
       const srcDir = process.cwd();
       const files = getAllFiles(srcDir, '');
