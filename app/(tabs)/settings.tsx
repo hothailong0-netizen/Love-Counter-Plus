@@ -153,7 +153,7 @@ export default function SettingsScreen() {
         <View style={styles.noCoupleContainer}>
           <Ionicons name="heart-dislike-outline" size={64} color={Colors.textSecondary} />
           <Text style={styles.noCoupleText}>
-            Hãy thiết lập thông tin cặp đôi trước
+            Hãy thiết lập thông tin cặp đôi ở màn hình chính trước
           </Text>
         </View>
       </View>

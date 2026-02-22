@@ -101,6 +101,9 @@ export function LoveProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  const memories = memoriesQuery.data ?? [];
+  const importantDates = importantDatesQuery.data ?? [];
+
   const now = new Date();
   const startDate = couple?.startDate ? parseISO(couple.startDate) : now;
 
@@ -125,8 +128,8 @@ export function LoveProvider({ children }: { children: ReactNode }) {
   const value = useMemo<LoveContextValue>(
     () => ({
       couple,
-      memories: memoriesQuery.data ?? [],
-      importantDates: importantDatesQuery.data ?? [],
+      memories,
+      importantDates,
       isLoading: coupleQuery.isLoading,
       daysInLove,
       monthsInLove,
@@ -156,8 +159,8 @@ export function LoveProvider({ children }: { children: ReactNode }) {
     }),
     [
       couple,
-      memoriesQuery.data,
-      importantDatesQuery.data,
+      memories,
+      importantDates,
       coupleQuery.isLoading,
       daysInLove,
       monthsInLove,
