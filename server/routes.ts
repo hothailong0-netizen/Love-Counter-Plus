@@ -239,6 +239,12 @@ async function pushCode(){
         fs.copyFileSync(full, destPath);
       }
 
+      const gitignorePath = path.join(tmpDir, '.gitignore');
+      if (fs.existsSync(gitignorePath)) {
+        let gi = fs.readFileSync(gitignorePath, 'utf8');
+        gi = gi.replace(/^android\/$/m, '').replace(/^ios\/$/m, '');
+        fs.writeFileSync(gitignorePath, gi);
+      }
       execSync(`git -C ${tmpDir} add -A`, { stdio: 'pipe' });
       execSync(`git -C ${tmpDir} commit -m "Đếm Ngày Yêu - Love Day Counter app"`, { stdio: 'pipe' });
       execSync(`git -C ${tmpDir} branch -M main`, { stdio: 'pipe' });
