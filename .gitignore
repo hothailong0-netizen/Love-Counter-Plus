@@ -11,7 +11,7 @@ expo-env.d.ts
 
 # Native
 ios/
-android/
+# android/ - needed for APK builds on GitHub Actions
 *.orig.*
 *.jks
 *.p8
