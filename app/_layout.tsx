@@ -27,7 +27,7 @@ function LoadingScreen({ onFinish }: { onFinish: () => void }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onFinish();
-    }, 2800);
+    }, 5000);
     return () => clearTimeout(timer);
   }, [onFinish]);
 
