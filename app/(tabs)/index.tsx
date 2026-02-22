@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Platform,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useLove } from "@/lib/love-context";
 import Colors from "@/constants/colors";
@@ -201,7 +202,11 @@ function SetupScreen() {
         partner2Name: partner2.trim(),
         startDate: isoDate,
       });
-    } catch (e) {
+    } catch (e: any) {
+      Alert.alert(
+        "Không thể kết nối",
+        "Không thể kết nối tới server. Vui lòng kiểm tra kết nối mạng và thử lại.\n\nChi tiết: " + (e?.message || "Lỗi không xác định")
+      );
     } finally {
       setIsCreating(false);
     }
