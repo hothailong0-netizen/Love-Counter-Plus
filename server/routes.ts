@@ -241,7 +241,14 @@ async function pushCode(){
         await new Promise(r => setTimeout(r, 2000));
       }
 
-      let ref = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/main`);
+      let defaultBranch = 'main';
+      const repoDetail = await ghApi(token, `/repos/${repoFullName}`);
+      if (repoDetail?.default_branch) {
+        defaultBranch = repoDetail.default_branch;
+      }
+      console.log(`GitHub Push: Repo ${repoFullName}, default branch: ${defaultBranch}`);
+
+      let ref = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/${defaultBranch}`);
       let parentSha = ref?.object?.sha;
 
       if (!parentSha) {
@@ -253,17 +260,20 @@ async function pushCode(){
         }, 'PUT');
         console.log('GitHub Push: Init result:', JSON.stringify(initResult).slice(0, 300));
         
-        if (initResult?.commit?.sha) {
-          await new Promise(r => setTimeout(r, 2000));
-          ref = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/main`);
-          parentSha = ref?.object?.sha;
+        await new Promise(r => setTimeout(r, 3000));
+        
+        const repoDetail2 = await ghApi(token, `/repos/${repoFullName}`);
+        if (repoDetail2?.default_branch) {
+          defaultBranch = repoDetail2.default_branch;
         }
+        ref = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/${defaultBranch}`);
+        parentSha = ref?.object?.sha;
       }
 
       if (!parentSha) {
         return res.json({ success: false, error: "Không khởi tạo được repo. Vui lòng xóa repo '" + repo + "' trên GitHub.com, rồi quay lại thử lại." });
       }
-      console.log(`GitHub Push: Parent SHA: ${parentSha}`);
+      console.log(`GitHub Push: Parent SHA: ${parentSha}, branch: ${defaultBranch}`);
 
       const srcDir = process.cwd();
       const files = getAllFiles(srcDir, '');
@@ -283,20 +293,24 @@ async function pushCode(){
         }
       }
 
-      const tree = await ghApi(token, `/repos/${repoFullName}/git/trees`, { tree: treeEntries });
+      console.log(`GitHub Push: Creating tree with ${treeEntries.length} entries for ${repoFullName}...`);
+      const tree = await ghApi(token, `/repos/${repoFullName}/git/trees`, { base_tree: parentSha, tree: treeEntries });
       if (!tree?.sha) {
+        console.log('GitHub Push: Tree error:', JSON.stringify(tree).slice(0, 500));
         return res.json({ success: false, error: "Không tạo được tree: " + JSON.stringify(tree).slice(0, 200) });
       }
+      console.log(`GitHub Push: Tree created: ${tree.sha}`);
 
-      const commitData: any = { message: 'Đếm Ngày Yêu - Love Day Counter app', tree: tree.sha };
-      if (parentSha) commitData.parents = [parentSha];
+      const commitData: any = { message: 'Đếm Ngày Yêu - Love Day Counter app', tree: tree.sha, parents: [parentSha] };
 
       const commit = await ghApi(token, `/repos/${repoFullName}/git/commits`, commitData);
       if (!commit?.sha) {
+        console.log('GitHub Push: Commit error:', JSON.stringify(commit).slice(0, 500));
         return res.json({ success: false, error: "Không tạo được commit" });
       }
+      console.log(`GitHub Push: Commit created: ${commit.sha}`);
 
-      await ghApi(token, `/repos/${repoFullName}/git/refs/heads/main`, { sha: commit.sha, force: true }, 'PATCH');
+      await ghApi(token, `/repos/${repoFullName}/git/refs/heads/${defaultBranch}`, { sha: commit.sha, force: true }, 'PATCH');
 
       console.log(`GitHub Push: SUCCESS to ${repoFullName}`);
       return res.json({ success: true, repoFullName, filesCount: treeEntries.length });
