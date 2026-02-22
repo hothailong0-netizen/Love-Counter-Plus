@@ -31,8 +31,6 @@ jobs:
       - name: Build Android APK
         working-directory: android
         run: chmod +x gradlew && ./gradlew assembleRelease
-        env:
-          EXPO_PUBLIC_API_URL: https://dem-ngay-yeu.replit.app
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
