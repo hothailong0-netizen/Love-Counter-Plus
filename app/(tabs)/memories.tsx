@@ -306,6 +306,7 @@ export default function MemoriesScreen() {
 
       {viewMode === "list" ? (
         <FlatList
+          key="list-view"
           data={filteredMemories}
           keyExtractor={(item) => item.id}
           renderItem={renderMemoryCard}
@@ -315,11 +316,11 @@ export default function MemoriesScreen() {
           ]}
           ListHeaderComponent={ListHeader}
           ListEmptyComponent={renderEmptyState}
-          scrollEnabled={!!filteredMemories && filteredMemories.length > 0}
           showsVerticalScrollIndicator={false}
         />
       ) : (
         <FlatList
+          key="grid-view"
           data={photoMemories}
           keyExtractor={(item) => item.id}
           renderItem={renderGridItem}
@@ -331,7 +332,6 @@ export default function MemoriesScreen() {
           ]}
           ListHeaderComponent={ListHeader}
           ListEmptyComponent={renderPhotoEmptyState}
-          scrollEnabled={photoMemories.length > 0}
           showsVerticalScrollIndicator={false}
         />
       )}

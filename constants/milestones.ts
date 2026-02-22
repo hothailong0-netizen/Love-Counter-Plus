@@ -17,7 +17,7 @@ const milestones: Milestone[] = [
   { days: 300, label: "300 Ngày", description: "Ba trăm ngày trọn vẹn yêu thương", icon: "gift" },
   { days: 365, label: "1 Năm", description: "Kỷ niệm một năm yêu nhau", icon: "heart-circle" },
   { days: 500, label: "500 Ngày", description: "Năm trăm ngày đong đầy kỷ niệm", icon: "diamond" },
-  { days: 730, label: "2 Năm", description: "Hai năm bên nhau, tình yêu vẫn nồng nàn", icon: "hearts" },
+  { days: 730, label: "2 Năm", description: "Hai năm bên nhau, tình yêu vẫn nồng nàn", icon: "heart-half" },
   { days: 1000, label: "1000 Ngày", description: "Một nghìn ngày yêu em", icon: "sparkles" },
   { days: 1095, label: "3 Năm", description: "Ba năm gắn bó, không gì lay chuyển", icon: "shield-checkmark" },
   { days: 1460, label: "4 Năm", description: "Bốn năm cùng nhau viết nên câu chuyện đẹp", icon: "book" },
