@@ -235,8 +235,34 @@ async function pushCode(){
 
       let repoExists = await ghApi(token, `/repos/${repoFullName}`);
       if (repoExists.message === 'Not Found') {
-        await ghApi(token, '/user/repos', { name: repo, private: false, auto_init: false });
+        await ghApi(token, '/user/repos', { name: repo, private: false, auto_init: true });
+        await new Promise(r => setTimeout(r, 3000));
       }
+
+      const ref = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/main`);
+      let isEmptyRepo = !ref?.object?.sha;
+
+      if (isEmptyRepo) {
+        console.log('GitHub Push: Empty repo detected, initializing...');
+        const initResult = await ghApi(token, `/repos/${repoFullName}/contents/README.md`, {
+          message: 'Initial commit',
+          content: Buffer.from('# ' + repo + '\n\nĐếm Ngày Yêu - Love Day Counter').toString('base64')
+        });
+        if (!initResult?.commit?.sha) {
+          const delRepo = await ghApi(token, `/repos/${repoFullName}`);
+          if (delRepo?.default_branch) {
+            await new Promise(r => setTimeout(r, 2000));
+            const retryRef = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/main`);
+            if (!retryRef?.object?.sha) {
+              return res.json({ success: false, error: "Không thể khởi tạo repo. Xóa repo trên GitHub và thử lại." });
+            }
+          }
+        }
+        await new Promise(r => setTimeout(r, 2000));
+      }
+
+      const latestRef = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/main`);
+      const parentSha = latestRef?.object?.sha;
 
       const srcDir = process.cwd();
       const files = getAllFiles(srcDir, '');
@@ -261,12 +287,6 @@ async function pushCode(){
         return res.json({ success: false, error: "Không tạo được tree: " + JSON.stringify(tree).slice(0, 200) });
       }
 
-      let parentSha: string | undefined;
-      const ref = await ghApi(token, `/repos/${repoFullName}/git/ref/heads/main`);
-      if (ref?.object?.sha) {
-        parentSha = ref.object.sha;
-      }
-
       const commitData: any = { message: 'Đếm Ngày Yêu - Love Day Counter app', tree: tree.sha };
       if (parentSha) commitData.parents = [parentSha];
 
@@ -275,37 +295,32 @@ async function pushCode(){
         return res.json({ success: false, error: "Không tạo được commit" });
       }
 
-      if (parentSha) {
-        await ghApi(token, `/repos/${repoFullName}/git/refs/heads/main`);
-        const updateUrl = `/repos/${repoFullName}/git/refs/heads/main`;
-        const updateReq = new Promise((resolve, reject) => {
-          const body = JSON.stringify({ sha: commit.sha, force: true });
-          const r = https.request({
-            hostname: 'api.github.com',
-            path: updateUrl,
-            method: 'PATCH',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-              'Accept': 'application/vnd.github+json',
-              'User-Agent': 'replit-push',
-              'Content-Length': Buffer.byteLength(body)
-            }
-          }, (resp) => {
-            let chunks: Buffer[] = [];
-            resp.on('data', (c: Buffer) => chunks.push(c));
-            resp.on('end', () => {
-              try { resolve(JSON.parse(Buffer.concat(chunks).toString())); } catch { resolve({}); }
-            });
+      const updateUrl = `/repos/${repoFullName}/git/refs/heads/main`;
+      const updateReq = new Promise((resolve, reject) => {
+        const body = JSON.stringify({ sha: commit.sha, force: true });
+        const r = https.request({
+          hostname: 'api.github.com',
+          path: updateUrl,
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github+json',
+            'User-Agent': 'replit-push',
+            'Content-Length': Buffer.byteLength(body)
+          }
+        }, (resp) => {
+          let chunks: Buffer[] = [];
+          resp.on('data', (c: Buffer) => chunks.push(c));
+          resp.on('end', () => {
+            try { resolve(JSON.parse(Buffer.concat(chunks).toString())); } catch { resolve({}); }
           });
-          r.on('error', reject);
-          r.write(body);
-          r.end();
         });
-        await updateReq;
-      } else {
-        await ghApi(token, `/repos/${repoFullName}/git/refs`, { ref: 'refs/heads/main', sha: commit.sha });
-      }
+        r.on('error', reject);
+        r.write(body);
+        r.end();
+      });
+      await updateReq;
 
       console.log(`GitHub Push: SUCCESS to ${repoFullName}`);
       return res.json({ success: true, repoFullName, filesCount: treeEntries.length });
